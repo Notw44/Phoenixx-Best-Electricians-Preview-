@@ -1,0 +1,6 @@
+{
+  "name": "Phoenix Best Electricians",
+  "description": "Premium 24/7 electrical panel upgrades, solar installations, and expert troubleshooting in Phoenix, AZ.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
