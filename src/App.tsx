@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import { import StackedImages from "./components/StackedImages"
   Zap, ShieldCheck, Award, Phone, Clock, MapPin, 
   Check, ChevronDown, Sparkles, Wrench, ArrowRight, 
   HelpCircle, Lock, Star 
