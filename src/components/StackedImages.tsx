@@ -7,8 +7,31 @@ import designerLighting from './assets/images/designer_lighting_1783000392525.jp
 
 export default function PortfolioSpotlight() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24 items-center">
-      
+    <div className="relative w-full flex justify-center items-center py-20">
+        <motion.img
+        src="/image1.jpg"
+        className="w-64 h-80 object-cover rounded-2xl absolute -rotate-6 shadow-xl"
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+      />
+
+      <motion.img
+        src="/image2.jpg"
+        className="w-64 h-80 object-cover rounded-2xl absolute rotate-3 shadow-xl"
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: 10, opacity: 1 }}
+      />
+
+      <motion.img
+        src="/image3.jpg"
+        className="w-64 h-80 object-cover rounded-2xl relative z-10 shadow-2xl"
+        initial={{ y: 120, opacity: 0 }}
+        animate={{ y: 20, opacity: 1 }}
+      />
+
+    </div>
+  );
+}
       {/* LEFT COLUMN: Text Content */}
       <div className="lg:col-span-6 space-y-8 text-left">
         <span className="text-[#FDE047] text-xs font-bold uppercase tracking-widest">
