@@ -15,7 +15,7 @@ import ShaderBackground from '@/components/ui/asd';
 import { SERVICES, REVIEWS, FAQS } from './data';
 import { Lead, Review } from './types';
 
-export default function App() {
+export default function App() {import StackedImages from "./components/StackedImages"
   const [reviews, setReviews] = useState<Review[]>(REVIEWS);
   const [selectedServiceId, setSelectedServiceId] = useState<string>('');
   const [isOwnerConsoleOpen, setIsOwnerConsoleOpen] = useState(false);
