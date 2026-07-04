@@ -26,7 +26,7 @@ import { SERVICES, REVIEWS, FAQS } from './data';
 import { Lead, Review } from './types';
 
 // Deluxe, 60fps viewport-triggered count-up counter for stats
-function AnimatedCounter({ value, duration = 1.5, suffix = "" }: { value: number; duration?: number; suffix?: string }) {
+function AnimatedCounter{ value, duration = 1.5, suffix = "" }: { value: number; duration?: number; suffix?: string }
   const [count, setCount] = useState(0);
   const elementRef = useRef<HTMLSpanElement | null>(null);
   const [started, setStarted] = useState(false);
