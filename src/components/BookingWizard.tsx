@@ -214,6 +214,33 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
       photoUrl
     };
 
+    let savedToSupabase = false;
+
+    // 1. Try to save directly to Supabase quotes table
+    if (supabase) {
+      try {
+        const { error } = await supabase
+          .from('quotes')
+          .insert([{
+            name,
+            email,
+            phone,
+            service_requested: serviceLabel,
+            project_description: `${selectedScopeLabel}. details: ${details || 'No additional details provided'}. Est: ${estimateValue}`,
+            created_at: new Date().toISOString()
+          }]);
+
+        if (!error) {
+          savedToSupabase = true;
+          console.log("Quote successfully saved directly to Supabase 'quotes' table.");
+        } else {
+          console.warn("Direct Supabase 'quotes' insert failed:", error.message);
+        }
+      } catch (err) {
+        console.error("Direct Supabase 'quotes' exception:", err);
+      }
+    }
+
     try {
       const response = await fetch('/api/leads', {
         method: 'POST',
@@ -229,7 +256,37 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
         savedLeads.unshift(savedLead);
         localStorage.setItem('pbe_leads', JSON.stringify(savedLeads));
       } else {
-        throw new Error('Server returned error status');
+        if (savedToSupabase) {
+          // If direct Supabase succeeded, treat the whole submission as success
+          const customLead: Lead = {
+            id: 'PBE-' + Math.floor(100000 + Math.random() * 900000),
+            name,
+            phone,
+            email,
+            serviceNeeded: serviceLabel,
+            scopeSize: selectedScopeLabel,
+            details: details || 'No additional details provided',
+            status: 'pending',
+            submittedAt: new Date().toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric"
+            }) + " " + new Date().toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit"
+            }),
+            estimatedPrice: estimateValue,
+            preferredTime,
+            photoUrl
+          };
+          setSubmittedLead(customLead);
+          onLeadSubmitted(customLead);
+          const savedLeads = JSON.parse(localStorage.getItem('pbe_leads') || '[]');
+          savedLeads.unshift(customLead);
+          localStorage.setItem('pbe_leads', JSON.stringify(savedLeads));
+        } else {
+          throw new Error('Server returned error status');
+        }
       }
     } catch (err) {
       console.error('Network error submitting lead, falling back to local simulation:', err);

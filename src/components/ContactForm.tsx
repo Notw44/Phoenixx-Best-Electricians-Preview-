@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 export default function ContactForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -31,6 +32,7 @@ export default function ContactForm() {
     const contactData = {
       name: name.trim(),
       email: email.trim(),
+      phone: phone.trim(),
       message: message.trim(),
       submittedAt
     };
@@ -42,7 +44,13 @@ export default function ContactForm() {
       try {
         const { error } = await supabase
           .from('contacts')
-          .insert([contactData]);
+          .insert([{
+            name: name.trim(),
+            email: email.trim(),
+            phone: phone.trim() || null,
+            message: message.trim(),
+            created_at: new Date().toISOString()
+          }]);
 
         if (!error) {
           savedToSupabase = true;
@@ -85,6 +93,7 @@ export default function ContactForm() {
         setSubmitStatus('success');
         setName('');
         setEmail('');
+        setPhone('');
         setMessage('');
       } else {
         // If we already saved to Supabase directly or to localStorage, we count it as a success for the user
@@ -92,6 +101,7 @@ export default function ContactForm() {
           setSubmitStatus('success');
           setName('');
           setEmail('');
+          setPhone('');
           setMessage('');
         } else {
           const data = await response.json().catch(() => ({}));
@@ -105,6 +115,7 @@ export default function ContactForm() {
         setSubmitStatus('success');
         setName('');
         setEmail('');
+        setPhone('');
         setMessage('');
       } else {
         setSubmitStatus('error');
@@ -263,6 +274,26 @@ export default function ContactForm() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="sophie@example.com"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/10 bg-[#0C0C0C] text-white placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm transition-all"
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Phone field */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-semibold text-[#888888] uppercase tracking-wider">
+                      Phone Number (Optional)
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-500">
+                        <Phone className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="(602) 555-0199"
                         className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/10 bg-[#0C0C0C] text-white placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm transition-all"
                         disabled={isSubmitting}
                       />

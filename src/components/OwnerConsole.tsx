@@ -3,7 +3,7 @@ import {
   Trash2, Users, TrendingUp, Activity, CheckCircle, 
   Calendar, DollarSign, X, FileSpreadsheet, Sparkles, Wrench,
   Lock, Mail, LogOut, Eye, EyeOff, ShieldAlert, Sparkle, ArrowRight,
-  Database, AlertTriangle, Check, Copy, MessageSquare, ExternalLink
+  Database, AlertTriangle, Check, Copy, MessageSquare, ExternalLink, Star
 } from 'lucide-react';
 import { Lead, ContactMessage } from '../types';
 import { supabase } from '../lib/supabase';
@@ -15,10 +15,11 @@ interface OwnerConsoleProps {
 export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [contacts, setContacts] = useState<ContactMessage[]>([]);
+  const [consoleReviews, setConsoleReviews] = useState<any[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   
   // Navigation
-  const [activeTab, setActiveTab] = useState<'leads' | 'contacts' | 'setup'>('leads');
+  const [activeTab, setActiveTab] = useState<'leads' | 'contacts' | 'reviews' | 'setup'>('leads');
   const [copied, setCopied] = useState(false);
   const [supabaseStatus, setSupabaseStatus] = useState<'checking' | 'active' | 'missing_tables' | 'disabled'>('checking');
   
@@ -35,6 +36,7 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
   useEffect(() => {
     loadLeads();
     loadContacts();
+    loadConsoleReviews();
     checkSupabaseStatus();
 
     if (supabase) {
@@ -71,7 +73,31 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
     }
   };
 
-  const loadContacts = () => {
+  const loadContacts = async () => {
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('contacts')
+          .select('*')
+          .order('id', { ascending: false });
+
+        if (!error && data) {
+          const mapped = data.map((c: any) => ({
+            id: 'CON-' + c.id,
+            name: c.name,
+            email: c.email,
+            phone: c.phone || 'No phone provided',
+            message: c.message,
+            submittedAt: c.created_at ? new Date(c.created_at).toLocaleString() : 'Just now'
+          }));
+          setContacts(mapped);
+          return;
+        }
+      } catch (err) {
+        console.error("Failed to query contacts from Supabase directly:", err);
+      }
+    }
+
     fetch('/api/contacts')
       .then(res => {
         if (!res.ok) throw new Error('API return not ok');
@@ -89,7 +115,36 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
       });
   };
 
-  const loadLeads = () => {
+  const loadLeads = async () => {
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('quotes')
+          .select('*')
+          .order('id', { ascending: false });
+
+        if (!error && data) {
+          const mapped = data.map((q: any) => ({
+            id: 'QTE-' + q.id,
+            name: q.name,
+            phone: q.phone,
+            email: q.email,
+            serviceNeeded: q.service_requested,
+            scopeSize: q.project_description,
+            details: '',
+            status: q.status || 'pending',
+            submittedAt: q.created_at ? new Date(q.created_at).toLocaleString() : 'Just now',
+            estimatedPrice: 'Price Pending',
+            preferredTime: 'Flexible'
+          }));
+          setLeads(mapped);
+          return;
+        }
+      } catch (err) {
+        console.error("Failed to query quotes from Supabase directly:", err);
+      }
+    }
+
     fetch('/api/leads')
       .then(res => res.json())
       .then(data => {
@@ -102,6 +157,35 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
         const savedLeads = JSON.parse(localStorage.getItem('pbe_leads') || '[]');
         setLeads(savedLeads);
       });
+  };
+
+  const loadConsoleReviews = async () => {
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('reviews')
+          .select('*')
+          .order('id', { ascending: false });
+
+        if (!error && data) {
+          setConsoleReviews(data);
+          return;
+        }
+      } catch (err) {
+        console.error("Failed to query reviews from Supabase directly:", err);
+      }
+    }
+
+    // Fallback to Express backend or local storage
+    try {
+      const res = await fetch('/api/reviews');
+      if (res.ok) {
+        const data = await res.json();
+        setConsoleReviews(data);
+      }
+    } catch (e) {
+      console.warn("Failed to fetch reviews via API in console:", e);
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -171,6 +255,25 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
   };
 
   const handleStatusChange = async (id: string, newStatus: 'pending' | 'dispatched' | 'completed') => {
+    const numericId = id.replace('QTE-', '');
+    if (supabase && id.startsWith('QTE-')) {
+      try {
+        const { error } = await supabase
+          .from('quotes')
+          .update({ status: newStatus })
+          .eq('id', numericId);
+
+        if (!error) {
+          setLeads(prev => prev.map(l => l.id === id ? { ...l, status: newStatus } : l));
+          return;
+        } else {
+          console.warn("Failed to update status on Supabase:", error.message);
+        }
+      } catch (err) {
+        console.error("Failed to update status on Supabase:", err);
+      }
+    }
+
     try {
       const response = await fetch(`/api/leads/${id}/status`, {
         method: 'PATCH',
@@ -198,6 +301,25 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
 
   const handleDeleteLead = async (id: string) => {
     if (!window.confirm('Are you sure you want to remove this lead/ticket record?')) return;
+    const numericId = id.replace('QTE-', '');
+    if (supabase && id.startsWith('QTE-')) {
+      try {
+        const { error } = await supabase
+          .from('quotes')
+          .delete()
+          .eq('id', numericId);
+
+        if (!error) {
+          setLeads(prev => prev.filter(l => l.id !== id));
+          return;
+        } else {
+          console.warn("Failed to delete quote on Supabase:", error.message);
+        }
+      } catch (err) {
+        console.error("Failed to delete quote on Supabase:", err);
+      }
+    }
+
     try {
       const response = await fetch(`/api/leads/${id}`, {
         method: 'DELETE'
@@ -217,6 +339,18 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
 
   const clearAllLeads = async () => {
     if (!window.confirm('Delete all stored leads? This cannot be undone.')) return;
+    if (supabase) {
+      try {
+        const { error } = await supabase.from('quotes').delete().neq('id', 0);
+        if (!error) {
+          setLeads([]);
+          return;
+        }
+      } catch (err) {
+        console.error("Failed to purge quotes on Supabase:", err);
+      }
+    }
+
     try {
       const response = await fetch('/api/leads/purge', {
         method: 'POST'
@@ -250,6 +384,25 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
 
   const handleDeleteContact = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this contact message?')) return;
+    const numericId = id.replace('CON-', '');
+    if (supabase && id.startsWith('CON-')) {
+      try {
+        const { error } = await supabase
+          .from('contacts')
+          .delete()
+          .eq('id', numericId);
+
+        if (!error) {
+          setContacts(prev => prev.filter(c => c.id !== id));
+          return;
+        } else {
+          console.warn("Failed to delete contact from Supabase:", error.message);
+        }
+      } catch (err) {
+        console.error("Failed to delete contact from Supabase:", err);
+      }
+    }
+
     try {
       const response = await fetch(`/api/contacts/${id}`, {
         method: 'DELETE'
@@ -270,6 +423,53 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
       } catch (e) {
         console.error(e);
       }
+    }
+  };
+
+  const handleApproveReview = async (id: number | string) => {
+    if (supabase) {
+      try {
+        const { error } = await supabase
+          .from('reviews')
+          .update({ approved: true })
+          .eq('id', id);
+
+        if (!error) {
+          setConsoleReviews(prev => prev.map(r => r.id === id ? { ...r, approved: true } : r));
+          console.log("Successfully approved review directly on Supabase!");
+        } else {
+          alert("Error approving review on Supabase: " + error.message);
+        }
+      } catch (err) {
+        console.error("Exception approving review:", err);
+      }
+    } else {
+      // Direct local state update fallback
+      setConsoleReviews(prev => prev.map(r => r.id === id ? { ...r, approved: true } : r));
+    }
+  };
+
+  const handleDeleteReview = async (id: number | string) => {
+    if (!window.confirm('Are you sure you want to permanently delete this review?')) return;
+    if (supabase) {
+      try {
+        const { error } = await supabase
+          .from('reviews')
+          .delete()
+          .eq('id', id);
+
+        if (!error) {
+          setConsoleReviews(prev => prev.filter(r => r.id !== id));
+          console.log("Successfully deleted review directly on Supabase!");
+        } else {
+          alert("Error deleting review on Supabase: " + error.message);
+        }
+      } catch (err) {
+        console.error("Exception deleting review:", err);
+      }
+    } else {
+      // Direct local state filter fallback
+      setConsoleReviews(prev => prev.filter(r => r.id !== id));
     }
   };
 
@@ -510,6 +710,18 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
           >
             <MessageSquare className="w-4 h-4" />
             Inbound Messages ({contacts.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab('reviews')}
+            className={`py-3.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+              activeTab === 'reviews'
+                ? 'border-[#FDE047] text-[#FDE047]'
+                : 'border-transparent text-neutral-400 hover:text-white'
+            }`}
+          >
+            <Star className="w-4 h-4 text-[#FDE047]" />
+            Reviews Queue ({consoleReviews.filter(r => !r.approved).length})
           </button>
 
           <button
@@ -851,6 +1063,95 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
           </>
         )}
 
+        {activeTab === 'reviews' && (
+          <>
+            {/* Reviews Header bar */}
+            <div className="bg-[#0C0C0C] px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/10 shrink-0">
+              <div className="text-left">
+                <span className="font-mono text-[10px] text-[#FDE047] uppercase tracking-widest font-bold">Reviews Management System</span>
+                <p className="text-xs text-neutral-400 mt-0.5">Approve, reject, or delete user reviews before they appear on the homepage.</p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={loadConsoleReviews}
+                  className="px-3.5 py-1.5 bg-[#111111] border border-white/10 hover:border-white/20 rounded-lg text-xs text-white font-medium cursor-pointer"
+                >
+                  Refresh Queue
+                </button>
+              </div>
+            </div>
+
+            {/* Reviews List */}
+            <div className="flex-1 overflow-y-auto p-6 bg-[#111111]">
+              {consoleReviews.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <Star className="w-12 h-12 text-[#888888] mb-3" />
+                  <p className="font-semibold text-white text-sm">No reviews found</p>
+                  <p className="text-xs text-neutral-400 mt-1 max-w-xs mx-auto">
+                    Reviews submitted by verified local customers will queue here.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {consoleReviews.map((rev) => (
+                    <div 
+                      key={rev.id} 
+                      className="border border-white/10 rounded-2xl p-5 bg-[#0C0C0C] text-left relative overflow-hidden group"
+                    >
+                      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                        <div className="space-y-2 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-mono text-[10px] font-bold text-[#FDE047] bg-neutral-900 px-2 py-0.5 rounded border border-white/5">
+                              REV-{rev.id}
+                            </span>
+                            <h4 className="font-semibold text-white text-sm">{rev.customer_name || rev.author}</h4>
+                            <div className="flex items-center gap-0.5 text-[#FDE047]">
+                              {Array.from({ length: rev.rating || 5 }).map((_, idx) => (
+                                <Star key={idx} className="w-3.5 h-3.5 fill-[#FDE047] text-[#FDE047]" />
+                              ))}
+                            </div>
+                            <span className={`text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded ${
+                              rev.approved 
+                                ? 'bg-emerald-950 text-emerald-400 border border-emerald-500/20' 
+                                : 'bg-amber-950 text-amber-400 border border-amber-500/20 animate-pulse'
+                            }`}>
+                              {rev.approved ? 'Approved & Public' : 'Pending Approval'}
+                            </span>
+                          </div>
+
+                          <div className="bg-[#111111] border border-white/5 rounded-xl p-4 text-xs text-neutral-300 mt-2 whitespace-pre-line leading-relaxed italic">
+                            &ldquo;{rev.review || rev.text}&rdquo;
+                          </div>
+                        </div>
+
+                        <div className="flex sm:flex-col items-center gap-2 shrink-0 self-center sm:self-start">
+                          {!rev.approved && (
+                            <button
+                              onClick={() => handleApproveReview(rev.id)}
+                              className="px-3.5 py-2 bg-emerald-950 hover:bg-emerald-900 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all hover:scale-[1.03] cursor-pointer"
+                              title="Approve review and show on website"
+                            >
+                              <Check className="w-4 h-4 stroke-[3]" /> Approve
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteReview(rev.id)}
+                            className="p-2 bg-red-955/20 hover:bg-red-900/40 border border-red-500/20 text-red-400 rounded-xl transition-all hover:scale-[1.03] cursor-pointer"
+                            title="Delete review"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
         {activeTab === 'setup' && (
           <div className="flex-1 overflow-y-auto p-6 sm:p-8 bg-[#111111] text-left space-y-6">
             <div className="bg-neutral-900/60 border border-white/10 rounded-2xl p-6 relative overflow-hidden">
@@ -935,41 +1236,35 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
             <div className="border-t border-white/5 pt-4">
               <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest font-semibold block mb-2">Schema Preview (SQL):</span>
               <pre className="p-4 bg-neutral-950 rounded-xl border border-white/5 font-mono text-[11px] text-neutral-400 overflow-x-auto max-h-[220px] select-all">
-{`-- 1. Create leads table
-CREATE TABLE IF NOT EXISTS public.leads (
-    id text PRIMARY KEY,
-    name text NOT NULL,
-    phone text NOT NULL,
-    email text NOT NULL,
-    "serviceNeeded" text,
-    "scopeSize" text,
-    details text,
-    status text DEFAULT 'pending'::text,
-    "submittedAt" text,
-    "estimatedPrice" text,
-    "preferredTime" text,
-    "photoUrl" text
-);
-
--- 2. Create reviews table
-CREATE TABLE IF NOT EXISTS public.reviews (
-    id text PRIMARY KEY,
-    author text NOT NULL,
-    rating integer NOT NULL,
-    "timeAgo" text,
-    text text NOT NULL,
-    "avatarUrl" text,
-    category text,
-    tags text[]
-);
-
--- 3. Create contacts table
+{`-- 1. Create contacts table
 CREATE TABLE IF NOT EXISTS public.contacts (
-    id text PRIMARY KEY,
+    id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name text NOT NULL,
     email text NOT NULL,
+    phone text,
     message text NOT NULL,
-    "submittedAt" text
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 2. Create quotes table
+CREATE TABLE IF NOT EXISTS public.quotes (
+    id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name text NOT NULL,
+    email text NOT NULL,
+    phone text NOT NULL,
+    service_requested text NOT NULL,
+    project_description text NOT NULL,
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 3. Create reviews table
+CREATE TABLE IF NOT EXISTS public.reviews (
+    id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    customer_name text NOT NULL,
+    rating integer NOT NULL,
+    review text NOT NULL,
+    approved boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );`}
               </pre>
             </div>

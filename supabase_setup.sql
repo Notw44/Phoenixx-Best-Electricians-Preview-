@@ -1,118 +1,73 @@
--- Supabase Setup Schema Script
+-- Supabase Setup Schema Script (V2 - Direct Client-Side Connect)
 -- Copy and execute this script inside the SQL Editor of your Supabase Dashboard (https://supabase.com)
--- to automatically provision all required database tables, default reviews, and secure storage buckets.
+-- to automatically provision all required database tables, default reviews, and security policies.
 
--- 1. Create the 'leads' table
-CREATE TABLE IF NOT EXISTS public.leads (
-    id text PRIMARY KEY,
-    name text NOT NULL,
-    phone text NOT NULL,
-    email text NOT NULL,
-    "serviceNeeded" text,
-    "scopeSize" text,
-    details text,
-    status text DEFAULT 'pending'::text,
-    "submittedAt" text,
-    "estimatedPrice" text,
-    "preferredTime" text,
-    "photoUrl" text
-);
-
--- Enable Row Level Security (RLS) on leads
-ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
-
--- Allow public read access to leads (useful for operator portal dashboard)
-CREATE POLICY "Allow public read access to leads" ON public.leads
-    FOR SELECT TO public USING (true);
-
--- Allow public insert access to leads (so customers can submit forms)
-CREATE POLICY "Allow public insert access to leads" ON public.leads
-    FOR INSERT TO public WITH CHECK (true);
-
--- Allow public updates to leads (so status changes can be saved)
-CREATE POLICY "Allow public update access to leads" ON public.leads
-    FOR UPDATE TO public USING (true) WITH CHECK (true);
-
--- Allow public deletion of leads (for operator database cleanups)
-CREATE POLICY "Allow public delete access to leads" ON public.leads
-    FOR DELETE TO public USING (true);
-
-
--- 2. Create the 'reviews' table
-CREATE TABLE IF NOT EXISTS public.reviews (
-    id text PRIMARY KEY,
-    author text NOT NULL,
-    rating integer NOT NULL,
-    "timeAgo" text,
-    text text NOT NULL,
-    "avatarUrl" text,
-    category text,
-    tags text[]
-);
-
--- Enable Row Level Security (RLS) on reviews
-ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
-
--- Allow public read access to reviews
-CREATE POLICY "Allow public read access to reviews" ON public.reviews
-    FOR SELECT TO public USING (true);
-
--- Allow public insert access to reviews
-CREATE POLICY "Allow public insert access to reviews" ON public.reviews
-    FOR INSERT TO public WITH CHECK (true);
-
--- Allow public deletion of reviews
-CREATE POLICY "Allow public delete access to reviews" ON public.reviews
-    FOR DELETE TO public USING (true);
-
-
--- 3. Create the 'contacts' table
+-- 1. Create the 'contacts' table
 CREATE TABLE IF NOT EXISTS public.contacts (
-    id text PRIMARY KEY,
+    id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name text NOT NULL,
     email text NOT NULL,
+    phone text,
     message text NOT NULL,
-    "submittedAt" text
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Enable Row Level Security (RLS) on contacts
+-- Enable RLS
 ALTER TABLE public.contacts ENABLE ROW LEVEL SECURITY;
 
--- Allow public read access to contacts (for operator portal management)
-CREATE POLICY "Allow public read access to contacts" ON public.contacts
-    FOR SELECT TO public USING (true);
-
--- Allow public insert access to contacts (so customers can submit the contact form)
-CREATE POLICY "Allow public insert access to contacts" ON public.contacts
-    FOR INSERT TO public WITH CHECK (true);
-
--- Allow public deletion of contacts
-CREATE POLICY "Allow public delete access to contacts" ON public.contacts
-    FOR DELETE TO public USING (true);
+-- Policies for public contacts
+CREATE POLICY "Allow public select contacts" ON public.contacts FOR SELECT TO public USING (true);
+CREATE POLICY "Allow public insert contacts" ON public.contacts FOR INSERT TO public WITH CHECK (true);
+CREATE POLICY "Allow public delete contacts" ON public.contacts FOR DELETE TO public USING (true);
 
 
--- 4. Seed the default customer reviews (so the reviews section displays immediately on load)
-INSERT INTO public.reviews (id, author, rating, "timeAgo", text, "avatarUrl", category, tags)
+-- 2. Create the 'quotes' table
+CREATE TABLE IF NOT EXISTS public.quotes (
+    id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name text NOT NULL,
+    email text NOT NULL,
+    phone text NOT NULL,
+    service_requested text NOT NULL,
+    project_description text NOT NULL,
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS
+ALTER TABLE public.quotes ENABLE ROW LEVEL SECURITY;
+
+-- Policies for public quotes
+CREATE POLICY "Allow public select quotes" ON public.quotes FOR SELECT TO public USING (true);
+CREATE POLICY "Allow public insert quotes" ON public.quotes FOR INSERT TO public WITH CHECK (true);
+CREATE POLICY "Allow public update quotes" ON public.quotes FOR UPDATE TO public USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public delete quotes" ON public.quotes FOR DELETE TO public USING (true);
+
+
+-- 3. Create the 'reviews' table
+CREATE TABLE IF NOT EXISTS public.reviews (
+    id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    customer_name text NOT NULL,
+    rating integer NOT NULL,
+    review text NOT NULL,
+    approved boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS
+ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
+
+-- Policies for public reviews
+CREATE POLICY "Allow public select reviews" ON public.reviews FOR SELECT TO public USING (true);
+CREATE POLICY "Allow public insert reviews" ON public.reviews FOR INSERT TO public WITH CHECK (true);
+CREATE POLICY "Allow public update reviews" ON public.reviews FOR UPDATE TO public USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public delete reviews" ON public.reviews FOR DELETE TO public USING (true);
+
+
+-- 4. Seed approved customer reviews for immediate visual feedback
+INSERT INTO public.reviews (customer_name, rating, review, approved)
 VALUES 
-('1', 'Sophie Copeland', 5, '4 months ago', 'I highly recommend Phoenix Best Electricians! They provided quick and expert service when updating our electrical panel. Tracy was very knowledgeable, answered all of our questions, and took time to explain everything clearly. The pricing was fair and transparent.', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', 'panel', ARRAY['Panel Upgrade', 'Skilled', 'Tracy']),
-('2', 'Shirley A', 5, '4 months ago', 'I’m really happy I chose to have my solar panels installed by this electrical company in Phoenix. I had about six different electricians come out for consultations, and in the end, the solar panel options they offered just made the most sense and the savings have been incredible!', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150', 'solar', ARRAY['Solar Panels', 'Consultation', 'Energy Savings']),
-('3', 'Robert K.', 5, '2 months ago', 'A breaker was repeatedly tripping at our place late at night. Tracy dispatched a team within 40 minutes, located the ground fault, replaced the failing breaker, and thoroughly tested the circuit. Outstanding service.', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', 'breaker', ARRAY['Breaker Tripping', 'Late Night', 'Emergency Dispatch']),
-('4', 'Marcus D.', 5, '1 month ago', 'Installed two high-end, smart-connected ceiling fans in our vaulted living room. Seamless, clean mounting, perfectly level, and completely quiet. Truly professional workmanship!', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150', 'ceiling_fan', ARRAY['Ceiling Fans', 'Vaulted Ceilings', 'Quiet Install']),
-('5', 'Elena R.', 5, '3 weeks ago', 'Phenomenal local team. They upgraded my subpanel to handle an EV charger install. From load calculations to final inspection, the process was seamless. Friendly, prompt, and top-tier quality.', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150', 'general', ARRAY['Subpanel Upgrade', 'EV Charger', 'Load Calculation'])
-ON CONFLICT (id) DO NOTHING;
-
-
--- 5. Set up Supabase Storage Bucket 'electrical-photos' for customer uploads
--- (Note: Storage setup via SQL can also be configured directly via the Supabase Storage UI,
--- but the queries below will attempt to create the bucket and enable access policies)
-INSERT INTO storage.buckets (id, name, public) 
-VALUES ('electrical-photos', 'electrical-photos', true)
-ON CONFLICT (id) DO NOTHING;
-
--- Storage public download policy
-CREATE POLICY "Allow public download of photos" ON storage.objects
-    FOR SELECT TO public USING (bucket_id = 'electrical-photos');
-
--- Storage public upload policy
-CREATE POLICY "Allow public upload of photos" ON storage.objects
-    FOR INSERT TO public WITH CHECK (bucket_id = 'electrical-photos');
+('Sophie Copeland', 5, 'I highly recommend Phoenix Best Electricians! They provided quick and expert service when updating our electrical panel. Tracy was very knowledgeable, answered all of our questions, and took time to explain everything clearly. The pricing was fair and transparent.', true),
+('Shirley A', 5, 'I’m really happy I chose to have my solar panels installed by this electrical company in Phoenix. I had about six different electricians come out for consultations, and in the end, the solar panel options they offered just made the most sense and the savings have been incredible!', true),
+('Tracey Conner', 5, 'I recently had an issue where one of my electrical breakers tripped and wouldn’t reset. After searching for electricians nearby, I found a company with great reviews and decided to give them a call. I was able to talk to someone right away and they dispatched Tracy within the hour. Outstanding service!', true),
+('Marcus Vance', 5, 'Needed 14 smart switches and dimmers installed across our home in Phoenix. Tracy did a spectacular job setting them up, grouping them, and ensuring everything met safety standards. Clean workspace and extremely skilled.', true),
+('Elena Rojas', 5, 'Phoenix heat is brutal, so when our primary living room ceiling fan stopped working, we needed a replacement immediately. Called Phoenix Best Electricians and they came out the same afternoon. Installed a gorgeous new fan and checked our panel, too.', true),
+('David K.', 5, 'Excellent condo work. Did a full electrical update for my unit in Midtown. They understood our complex building codes and completed everything on time with zero issues from the HOA. Pricing was very reasonable.', true);

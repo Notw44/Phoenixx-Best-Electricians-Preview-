@@ -5,6 +5,7 @@ import {
   HelpCircle, Lock, Star 
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { supabase } from './lib/supabase';
 
 import Header from './components/Header';
 import BookingWizard from './components/BookingWizard';
@@ -138,19 +139,52 @@ export default function App() {
   ];
 
   useEffect(() => {
-    fetch('/api/reviews')
-      .then(res => {
-        if (!res.ok) throw new Error('API return not ok');
-        return res.json();
-      })
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setReviews(data);
+    const fetchApprovedReviews = async () => {
+      if (supabase) {
+        try {
+          const { data, error } = await supabase
+            .from('reviews')
+            .select('*')
+            .eq('approved', true)
+            .order('id', { ascending: false });
+
+          if (!error && data && data.length > 0) {
+            const mapped = data.map((row: any) => ({
+              id: String(row.id),
+              author: row.customer_name,
+              rating: row.rating,
+              timeAgo: row.created_at ? new Date(row.created_at).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' }) : 'Just now',
+              text: row.review,
+              avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(row.customer_name)}`,
+              category: 'general',
+              tags: ['Verified Customer']
+            }));
+            setReviews(mapped);
+            return;
+          } else if (error) {
+            console.warn("Supabase reviews query returned error:", error.message);
+          }
+        } catch (err) {
+          console.error("Failed to query reviews directly from Supabase:", err);
         }
-      })
-      .catch(err => {
+      }
+
+      // Fallback 1: Express Server API (which we will also filter)
+      try {
+        const res = await fetch('/api/reviews');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setReviews(data);
+            return;
+          }
+        }
+      } catch (err) {
         console.warn('Failed to load reviews from API, keeping default static reviews:', err);
-      });
+      }
+    };
+
+    fetchApprovedReviews();
   }, []);
 
   // Scroll to estimate engine helper
@@ -170,28 +204,53 @@ export default function App() {
   };
 
   const handleAddReview = async (newReview: Review) => {
-    try {
-      const response = await fetch('/api/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          author: newReview.author,
-          rating: newReview.rating,
-          text: newReview.text,
-          category: newReview.category,
-          tags: newReview.tags
-        })
-      });
-      if (response.ok) {
-        const saved = await response.json();
-        setReviews(prev => [saved, ...prev]);
-      } else {
-        setReviews(prev => [newReview, ...prev]);
+    let submittedToSupabase = false;
+
+    if (supabase) {
+      try {
+        const { error } = await supabase
+          .from('reviews')
+          .insert([{
+            customer_name: newReview.author,
+            rating: newReview.rating,
+            review: newReview.text,
+            approved: false // Default to false so it requires admin approval
+          }]);
+
+        if (!error) {
+          submittedToSupabase = true;
+          console.log("Review submitted successfully directly to Supabase (pending approval).");
+        } else {
+          console.warn("Direct Supabase review insert failed:", error.message);
+        }
+      } catch (err) {
+        console.error("Direct Supabase review exception:", err);
       }
-    } catch (err) {
-      console.error('Network error adding review, fallback to UI state:', err);
-      setReviews(prev => [newReview, ...prev]);
     }
+
+    if (!submittedToSupabase) {
+      try {
+        const response = await fetch('/api/reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            author: newReview.author,
+            rating: newReview.rating,
+            text: newReview.text,
+            category: newReview.category,
+            tags: newReview.tags
+          })
+        });
+        if (response.ok) {
+          console.log("Review submitted successfully via backend API (pending approval).");
+        }
+      } catch (err) {
+        console.error('Network error adding review:', err);
+      }
+    }
+    
+    // NOTE: We DO NOT append the review to the local reviews state immediately!
+    // Since it is approved = false, it must NOT appear on the home page until Tracy approves it in OwnerConsole.
   };
 
   return (

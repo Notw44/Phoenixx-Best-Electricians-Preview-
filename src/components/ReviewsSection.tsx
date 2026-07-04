@@ -144,11 +144,13 @@ export default function ReviewsSection({ reviews, onAddReview }: ReviewsSectionP
         <div className="bg-[#111111] border border-white/10 rounded-2xl p-6 sm:p-8 relative shadow-2xl">
           {submitSuccess ? (
             <div className="flex flex-col items-center justify-center py-8 space-y-3">
-              <div className="w-12 h-12 bg-emerald-950 text-emerald-400 rounded-full flex items-center justify-center border border-emerald-500/25">
+              <div className="w-12 h-12 bg-amber-950 text-[#FDE047] rounded-full flex items-center justify-center border border-[#FDE047]/25">
                 <Check className="w-6 h-6 stroke-[3]" />
               </div>
               <p className="font-semibold text-white text-sm">Review Submitted Successfully!</p>
-              <p className="text-xs text-neutral-400">Thank you for rating Phoenix Best Electricians.</p>
+              <p className="text-xs text-neutral-300 max-w-sm text-center">
+                Thank you for rating Phoenix Best Electricians! Your review is currently pending security verification and will appear on the live website once approved by central dispatch.
+              </p>
             </div>
           ) : (
             <form onSubmit={handleReviewSubmit} className="space-y-4 text-left">

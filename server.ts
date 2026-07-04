@@ -539,6 +539,7 @@ app.get("/api/reviews", async (req, res) => {
       const { data, error } = await supabase
         .from("reviews")
         .select("*")
+        .eq("approved", true)
         .order("id", { ascending: false });
 
       if (error) {
@@ -549,7 +550,17 @@ app.get("/api/reviews", async (req, res) => {
           console.log("Supabase select reviews info:", error.message);
         }
       } else {
-        return res.json(data || []);
+        const mapped = (data || []).map((row: any) => ({
+          id: String(row.id),
+          author: row.customer_name,
+          rating: row.rating,
+          timeAgo: row.created_at ? new Date(row.created_at).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' }) : 'Just now',
+          text: row.review,
+          avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(row.customer_name)}`,
+          category: 'general',
+          tags: ['Verified Customer']
+        }));
+        return res.json(mapped);
       }
     } catch (e) {
       console.log("Supabase select reviews exception:", e);
@@ -561,28 +572,22 @@ app.get("/api/reviews", async (req, res) => {
 
 // Create a review
 app.post("/api/reviews", async (req, res) => {
-  const { author, rating, text, category, tags } = req.body;
+  const { author, rating, text } = req.body;
 
   if (!author || !text) {
     return res.status(400).json({ error: "Author and review text are required fields." });
   }
 
-  const newReview: Review = {
-    id: "REV-" + Math.floor(1000 + Math.random() * 9000),
-    author,
-    rating: typeof rating === "number" ? rating : 5,
-    timeAgo: "Just now",
-    text,
-    category: category || "general",
-    tags: Array.isArray(tags) ? tags : ["Verified", "Tracy"],
-    avatarUrl: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 500000)}?w=150`
-  };
-
   if (supabase && !isReviewsTableMissing) {
     try {
       const { data, error } = await supabase
         .from("reviews")
-        .insert([newReview])
+        .insert([{
+          customer_name: author,
+          rating: typeof rating === "number" ? rating : 5,
+          review: text,
+          approved: false // Require approval before public listing
+        }])
         .select()
         .single();
 
@@ -594,12 +599,33 @@ app.post("/api/reviews", async (req, res) => {
           console.log("Supabase insert review info:", error.message);
         }
       } else {
-        return res.status(201).json(data);
+        const mapped = {
+          id: String(data.id),
+          author: data.customer_name,
+          rating: data.rating,
+          timeAgo: 'Just now',
+          text: data.review,
+          avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.customer_name)}`,
+          category: 'general',
+          tags: ['Verified Customer']
+        };
+        return res.status(201).json(mapped);
       }
     } catch (e) {
       console.log("Supabase insert review exception:", e);
     }
   }
+
+  const newReview: Review = {
+    id: "REV-" + Math.floor(1000 + Math.random() * 9000),
+    author,
+    rating: typeof rating === "number" ? rating : 5,
+    timeAgo: "Just now",
+    text,
+    category: "general",
+    tags: ["Verified", "Tracy"],
+    avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(author)}`
+  };
 
   const db = getDB();
   db.reviews.unshift(newReview);
