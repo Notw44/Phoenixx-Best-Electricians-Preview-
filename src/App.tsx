@@ -229,7 +229,7 @@ const handleAddQuote = async (newQuote) => {
           message: newQuote.message,
           status: "new"
         }]);
-
+console.log("QUOTE FLOW STARTED");
       if (error) {
         console.warn("Quote insert failed:", error.message);
       } else {
