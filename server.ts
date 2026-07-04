@@ -553,13 +553,13 @@ app.get("/api/reviews", async (req, res) => {
       } else {
         const mapped = (data || []).map((row: any) => ({
           id: String(row.id),
-          author: row.customer_name,
+          author: row.name || row.customer_name || 'Anonymous',
           rating: row.rating,
           timeAgo: row.created_at ? new Date(row.created_at).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' }) : 'Just now',
-          text: row.review,
-          avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(row.customer_name)}`,
-          category: 'general',
-          tags: ['Verified Customer']
+          text: row.review || row.text || '',
+          avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(row.name || row.customer_name || 'Anonymous')}`,
+          category: row.service || 'general',
+          tags: Array.isArray(row.tags) ? row.tags : (typeof row.tags === 'string' ? row.tags.split(',') : ['Verified Customer'])
         }));
         return res.json(mapped);
       }
@@ -573,24 +573,51 @@ app.get("/api/reviews", async (req, res) => {
 
 // Create a review
 app.post("/api/reviews", async (req, res) => {
-  const { author, rating, text } = req.body;
+  const { name, service, rating, review, tags, author, text, skipSupabase } = req.body;
+  const authorVal = name || author;
+  const reviewVal = review || text;
+  const ratingVal = typeof rating === "number" ? rating : 5;
+  const serviceVal = service || "general";
+  const tagsVal = Array.isArray(tags) ? tags : [];
 
-  if (!author || !text) {
-    return res.status(400).json({ error: "Author and review text are required fields." });
+  if (!authorVal || !reviewVal) {
+    return res.status(400).json({ error: "Author name and review comments are required fields." });
   }
 
-  if (supabase && !isReviewsTableMissing) {
+  if (supabase && !isReviewsTableMissing && !skipSupabase) {
     try {
-      const { data, error } = await supabase
+      // Try to insert with exact mapped fields first
+      let insertResult = await supabase
         .from("reviews")
         .insert([{
-          customer_name: author,
-          rating: typeof rating === "number" ? rating : 5,
-          review: text,
-          approved: false // Require approval before public listing
+          name: authorVal.trim(),
+          service: serviceVal,
+          rating: ratingVal,
+          review: reviewVal.trim(),
+          tags: tagsVal,
+          approved: false
         }])
         .select()
         .single();
+
+      let data = insertResult.data;
+      let error = insertResult.error;
+
+      if (error && (error.message.includes('column') || error.message.includes('does not exist'))) {
+        console.warn("New schema columns missing on server insert, trying legacy columns fallback.");
+        const fallbackResult = await supabase
+          .from("reviews")
+          .insert([{
+            customer_name: authorVal.trim(),
+            rating: ratingVal,
+            review: reviewVal.trim(),
+            approved: false
+          }])
+          .select()
+          .single();
+        data = fallbackResult.data;
+        error = fallbackResult.error;
+      }
 
       if (error) {
         if (error.message.includes("Could not find the table")) {
@@ -602,13 +629,13 @@ app.post("/api/reviews", async (req, res) => {
       } else {
         const mapped = {
           id: String(data.id),
-          author: data.customer_name,
+          author: data.name || data.customer_name || 'Anonymous',
           rating: data.rating,
           timeAgo: 'Just now',
-          text: data.review,
-          avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.customer_name)}`,
-          category: 'general',
-          tags: ['Verified Customer']
+          text: data.review || data.text || '',
+          avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.name || data.customer_name || 'Anonymous')}`,
+          category: data.service || 'general',
+          tags: Array.isArray(data.tags) ? data.tags : ['Verified Customer']
         };
         return res.status(201).json(mapped);
       }
@@ -619,13 +646,13 @@ app.post("/api/reviews", async (req, res) => {
 
   const newReview: Review = {
     id: "REV-" + Math.floor(1000 + Math.random() * 9000),
-    author,
-    rating: typeof rating === "number" ? rating : 5,
+    author: authorVal,
+    rating: ratingVal,
     timeAgo: "Just now",
-    text,
-    category: "general",
-    tags: ["Verified", "Tracy"],
-    avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(author)}`
+    text: reviewVal,
+    category: serviceVal,
+    tags: tagsVal.length > 0 ? tagsVal : ["Verified", "Tracy"],
+    avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(authorVal)}`
   };
 
   const db = getDB();

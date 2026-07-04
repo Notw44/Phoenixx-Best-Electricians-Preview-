@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Star, ThumbsUp, CheckCircle, MessageSquare, Plus, PenTool, Check } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Review } from '../types';
+import { supabase } from '../lib/supabase';
 
 interface ReviewsSectionProps {
   reviews: Review[];
@@ -19,6 +20,9 @@ export default function ReviewsSection({ reviews, onAddReview }: ReviewsSectionP
   const [newCategory, setNewCategory] = useState<'panel' | 'solar' | 'breaker' | 'ceiling_fan' | 'general'>('general');
   const [newTags, setNewTags] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Filter keys matching available reviews
   const filters = [
@@ -34,37 +38,141 @@ export default function ReviewsSection({ reviews, onAddReview }: ReviewsSectionP
     ? reviews
     : reviews.filter(r => r.category === activeFilter);
 
-  const handleReviewSubmit = (e: React.FormEvent) => {
+  const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAuthor || !newText) return;
+
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+    setErrorMessage('');
 
     const tagsArray = newTags 
       ? newTags.split(',').map(t => t.trim()) 
       : [newCategory === 'panel' ? 'Panel' : newCategory === 'solar' ? 'Solar' : 'Service', 'Skilled'];
 
-    const newReview: Review = {
-      id: 'REV-' + Math.floor(1000 + Math.random() * 9000),
-      author: newAuthor,
-      rating: newRating,
-      timeAgo: 'Just now',
-      text: newText,
-      avatarUrl: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 500000)}?w=150`,
-      category: newCategory,
-      tags: tagsArray
-    };
+    let savedToSupabase = false;
 
-    onAddReview(newReview);
-    setSubmitSuccess(true);
-    
-    // Clear state
-    setTimeout(() => {
-      setSubmitSuccess(false);
-      setIsAddingReview(false);
-      setNewAuthor('');
-      setNewRating(5);
-      setNewText('');
-      setNewTags('');
-    }, 2000);
+    if (supabase) {
+      try {
+        // Attempt to insert with the exact requested mapped fields
+        const { error } = await supabase
+          .from('reviews')
+          .insert([{
+            name: newAuthor.trim(),
+            service: newCategory,
+            rating: newRating,
+            review: newText.trim(),
+            tags: tagsArray,
+            approved: false
+          }]);
+
+        if (!error) {
+          savedToSupabase = true;
+          console.log("Review successfully saved directly to Supabase with mapped fields.");
+        } else {
+          // If error is about missing columns, try fallback to legacy schema
+          if (error.message.includes('column') || error.message.includes('does not exist')) {
+            console.warn("New schema columns missing, falling back to legacy reviews table columns.");
+            const { error: fallbackError } = await supabase
+              .from('reviews')
+              .insert([{
+                customer_name: newAuthor.trim(),
+                rating: newRating,
+                review: newText.trim(),
+                approved: false
+              }]);
+
+            if (!fallbackError) {
+              savedToSupabase = true;
+              console.log("Review successfully saved to legacy Supabase reviews table.");
+            } else {
+              console.error("Direct Supabase fallback insert failed:", fallbackError.message);
+              setSubmitStatus('error');
+              setErrorMessage("Supabase error: " + fallbackError.message);
+              setIsSubmitting(false);
+              return;
+            }
+          } else {
+            console.error("Direct Supabase insert failed:", error.message);
+            setSubmitStatus('error');
+            setErrorMessage("Supabase error: " + error.message);
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      } catch (err: any) {
+        console.error("Direct Supabase exception:", err);
+        setSubmitStatus('error');
+        setErrorMessage("Supabase exception: " + (err.message || err));
+        setIsSubmitting(false);
+        return;
+      }
+    } else {
+      console.warn("Supabase client is not configured/initialized. Trying server fallback...");
+    }
+
+    // Trigger API backend sync/fallback to maintain local database consistency
+    try {
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: newAuthor.trim(),
+          service: newCategory,
+          rating: newRating,
+          review: newText.trim(),
+          tags: tagsArray,
+          approved: false,
+          skipSupabase: savedToSupabase
+        })
+      });
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        setSubmitSuccess(true);
+        // Clear fields
+        setNewAuthor('');
+        setNewRating(5);
+        setNewText('');
+        setNewTags('');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        if (savedToSupabase) {
+          setSubmitStatus('success');
+          setSubmitSuccess(true);
+          setNewAuthor('');
+          setNewRating(5);
+          setNewText('');
+          setNewTags('');
+          console.warn("Server sync returned a non-ok status, but direct Supabase insert succeeded:", data.error);
+        } else {
+          setSubmitStatus('error');
+          setErrorMessage(data.error || 'Failed to sync with server.');
+        }
+      }
+    } catch (err) {
+      console.error("Failed to sync review via API:", err);
+      if (savedToSupabase) {
+        setSubmitStatus('success');
+        setSubmitSuccess(true);
+        setNewAuthor('');
+        setNewRating(5);
+        setNewText('');
+        setNewTags('');
+        console.info("Server sync network error, but direct Supabase insert succeeded.");
+      } else {
+        setSubmitStatus('error');
+        setErrorMessage('A network error occurred during server sync.');
+      }
+    } finally {
+      setIsSubmitting(false);
+      // Reset success overlay after delay
+      setTimeout(() => {
+        setSubmitSuccess(false);
+      }, 5000);
+    }
   };
 
   return (
@@ -159,11 +267,18 @@ export default function ReviewsSection({ reviews, onAddReview }: ReviewsSectionP
                 <button 
                   type="button" 
                   onClick={() => setIsAddingReview(false)} 
-                  className="text-xs text-[#888888] hover:text-white"
+                  disabled={isSubmitting}
+                  className="text-xs text-[#888888] hover:text-white disabled:opacity-50"
                 >
                   Cancel
                 </button>
               </div>
+
+              {submitStatus === 'error' && errorMessage && (
+                <div className="p-3.5 rounded-xl bg-red-955/20 border border-red-500/20 text-red-400 text-xs font-mono">
+                  ⚠️ {errorMessage}
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
@@ -171,10 +286,11 @@ export default function ReviewsSection({ reviews, onAddReview }: ReviewsSectionP
                   <input
                     type="text"
                     required
+                    disabled={isSubmitting}
                     value={newAuthor}
                     onChange={(e) => setNewAuthor(e.target.value)}
                     placeholder="e.g. Sophie Copeland"
-                    className="w-full p-2.5 rounded-xl border border-white/10 bg-[#0C0C0C] text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm"
+                    className="w-full p-2.5 rounded-xl border border-white/10 bg-[#0C0C0C] text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50"
                   />
                 </div>
 
@@ -182,8 +298,9 @@ export default function ReviewsSection({ reviews, onAddReview }: ReviewsSectionP
                   <label className="block text-[10px] font-semibold text-[#888888] uppercase tracking-wider font-mono">Related Service</label>
                   <select
                     value={newCategory}
+                    disabled={isSubmitting}
                     onChange={(e) => setNewCategory(e.target.value as any)}
-                    className="w-full p-2.5 rounded-xl border border-white/10 bg-[#0C0C0C] text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm"
+                    className="w-full p-2.5 rounded-xl border border-white/10 bg-[#0C0C0C] text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50"
                   >
                     <option value="panel" className="bg-[#111111]">Electrical Panel Upgrade</option>
                     <option value="solar" className="bg-[#111111]">Solar Installation</option>
@@ -202,8 +319,9 @@ export default function ReviewsSection({ reviews, onAddReview }: ReviewsSectionP
                     <button
                       key={star}
                       type="button"
+                      disabled={isSubmitting}
                       onClick={() => setNewRating(star)}
-                      className="focus:outline-none group transition-transform active:scale-90 cursor-pointer"
+                      className="focus:outline-none group transition-transform active:scale-90 cursor-pointer disabled:opacity-50"
                     >
                       <Star 
                         className={`w-6 h-6 ${
@@ -222,10 +340,11 @@ export default function ReviewsSection({ reviews, onAddReview }: ReviewsSectionP
                 <label className="block text-[10px] font-semibold text-[#888888] uppercase tracking-wider font-mono">Review Comments</label>
                 <textarea
                   required
+                  disabled={isSubmitting}
                   value={newText}
                   onChange={(e) => setNewText(e.target.value)}
                   placeholder="Tell others about your experience with Tracy..."
-                  className="w-full p-3 rounded-xl border border-white/10 bg-[#0C0C0C] text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm min-h-[90px]"
+                  className="w-full p-3 rounded-xl border border-white/10 bg-[#0C0C0C] text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm min-h-[90px] disabled:opacity-50"
                 />
               </div>
 
@@ -233,18 +352,20 @@ export default function ReviewsSection({ reviews, onAddReview }: ReviewsSectionP
                 <label className="block text-[10px] font-semibold text-[#888888] uppercase tracking-wider font-mono">Tags / Keywords (comma separated)</label>
                 <input
                   type="text"
+                  disabled={isSubmitting}
                   value={newTags}
                   onChange={(e) => setNewTags(e.target.value)}
                   placeholder="e.g. Quick Service, Tracy, Knowledgeable"
-                  className="w-full p-2.5 rounded-xl border border-white/10 bg-[#0C0C0C] text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm"
+                  className="w-full p-2.5 rounded-xl border border-white/10 bg-[#0C0C0C] text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 bg-[#FDE047] hover:bg-[#FDE047]/90 text-[#0C0C0C] font-semibold text-sm rounded-xl transition-all shadow-md active:scale-98 cursor-pointer"
+                disabled={isSubmitting}
+                className="w-full py-3 bg-[#FDE047] hover:bg-[#FDE047]/90 text-[#0C0C0C] font-semibold text-sm rounded-xl transition-all shadow-md active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Publish Anonymous Review
+                {isSubmitting ? 'Publishing Review...' : 'Publish Anonymous Review'}
               </button>
             </form>
           )}
