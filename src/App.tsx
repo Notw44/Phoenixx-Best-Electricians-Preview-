@@ -190,26 +190,56 @@ export default function App() {
           } else if (error) {
             console.warn("Supabase reviews query returned error:", error.message);
           }
-        } catch (err) {
-          console.error("Failed to query reviews directly from Supabase:", err);
-        }
+             } catch (err) {
+        console.error("Direct Supabase review exception:", err);
       }
+    }
 
-      // Fallback 1: Express Server API (which we will also filter)
+    if (!submittedToSupabase) {
       try {
-        const res = await fetch('/api/reviews');
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            setReviews(data);
-            return;
-          }
+        const response = await fetch('/api/reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            author: newReview.author,
+            rating: newReview.rating,
+            text: newReview.text,
+            category: newReview.category,
+            tags: newReview.tags
+          })
+        });
+
+        if (response.ok) {
+          console.log("Review submitted successfully via backend API (pending approval).");
         }
       } catch (err) {
-        console.warn('Failed to load reviews from API, keeping default static reviews:', err);
+        console.error('Network error adding review:', err);
       }
-    };
+    }
+  };
+const handleAddQuote = async (newQuote) => {
+  if (supabase) {
+    try {
+      const { error } = await supabase
+        .from('quotes')
+        .insert([{
+          name: newQuote.name,
+          email: newQuote.email,
+          service: newQuote.service,
+          message: newQuote.message,
+          status: "new"
+        }]);
 
+      if (error) {
+        console.warn("Quote insert failed:", error.message);
+      } else {
+        console.log("Quote submitted successfully.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+};
     fetchApprovedReviews();
   }, []);
 
