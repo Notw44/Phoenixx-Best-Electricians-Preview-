@@ -131,7 +131,15 @@ const ScrollExpandMedia = ({
 
     const handleScroll = (): void => {
       if (!mediaFullyExpandedRef.current) {
-        window.scrollTo(0, 0);
+        if (window.scrollY > 10) {
+          progressRef.current = 1;
+          progressValue.set(1);
+          mediaFullyExpandedRef.current = true;
+          setMediaFullyExpanded(true);
+          setShowContent(true);
+        } else {
+          window.scrollTo(0, 0);
+        }
       }
     };
 

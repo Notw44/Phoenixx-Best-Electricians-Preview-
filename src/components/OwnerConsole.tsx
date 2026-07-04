@@ -73,14 +73,19 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
 
   const loadContacts = () => {
     fetch('/api/contacts')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('API return not ok');
+        return res.json();
+      })
       .then(data => {
         if (Array.isArray(data)) {
           setContacts(data);
         }
       })
       .catch(err => {
-        console.error('Error fetching contact submissions:', err);
+        console.error('Error fetching contact submissions, fallback to localStorage:', err);
+        const savedContacts = JSON.parse(localStorage.getItem('pbe_contacts') || '[]');
+        setContacts(savedContacts);
       });
   };
 
@@ -255,8 +260,16 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
         throw new Error('API delete failed');
       }
     } catch (err) {
-      console.error('Failed to delete contact from server:', err);
+      console.error('Failed to delete contact from server, applying local fallback:', err);
       setContacts(prev => prev.filter(c => c.id !== id));
+    } finally {
+      try {
+        const localConts = JSON.parse(localStorage.getItem('pbe_contacts') || '[]');
+        const updatedLocal = localConts.filter((c: any) => c.id !== id);
+        localStorage.setItem('pbe_contacts', JSON.stringify(updatedLocal));
+      } catch (e) {
+        console.error(e);
+      }
     }
   };
 
@@ -274,6 +287,12 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
     } catch (err) {
       console.error('Failed to purge contacts:', err);
       setContacts([]);
+    } finally {
+      try {
+        localStorage.setItem('pbe_contacts', JSON.stringify([]));
+      } catch (e) {
+        console.error(e);
+      }
     }
   };
 

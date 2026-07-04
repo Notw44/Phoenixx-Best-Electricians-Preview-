@@ -73,7 +73,7 @@ function AnimatedCounter({ value, duration = 1.5, suffix = "" }: { value: number
 }
 
 export default function App() {
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState<Review[]>(REVIEWS);
   const [selectedServiceId, setSelectedServiceId] = useState<string>('');
   const [isOwnerConsoleOpen, setIsOwnerConsoleOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
@@ -139,13 +139,18 @@ export default function App() {
 
   useEffect(() => {
     fetch('/api/reviews')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('API return not ok');
+        return res.json();
+      })
       .then(data => {
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           setReviews(data);
         }
       })
-      .catch(err => console.error('Failed to load reviews from API:', err));
+      .catch(err => {
+        console.warn('Failed to load reviews from API, keeping default static reviews:', err);
+      });
   }, []);
 
   // Scroll to estimate engine helper

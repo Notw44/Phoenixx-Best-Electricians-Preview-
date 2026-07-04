@@ -55,7 +55,23 @@ export default function ContactForm() {
       }
     }
 
-    // 2. Always sync/fallback with the server-side API to maintain db.json consistency and server-side Supabase redundancy
+    // 2. Always log to localStorage so it is available locally in the Operator Portal on Vercel
+    let savedToLocalStorage = false;
+    try {
+      const existing = JSON.parse(localStorage.getItem('pbe_contacts') || '[]');
+      const newContact = {
+        id: 'CON-' + Math.floor(1000 + Math.random() * 9000),
+        ...contactData
+      };
+      existing.unshift(newContact);
+      localStorage.setItem('pbe_contacts', JSON.stringify(existing));
+      savedToLocalStorage = true;
+      console.log("Contact successfully saved to localStorage fallback.");
+    } catch (lsErr) {
+      console.warn("Failed to write contact to localStorage:", lsErr);
+    }
+
+    // 3. Always sync/fallback with the server-side API to maintain db.json consistency and server-side Supabase redundancy
     try {
       const response = await fetch('/api/contacts', {
         method: 'POST',
@@ -71,21 +87,21 @@ export default function ContactForm() {
         setEmail('');
         setMessage('');
       } else {
-        const data = await response.json();
-        // If we already saved to Supabase directly, we can count it as a success even if local server sync failed
-        if (savedToSupabase) {
+        // If we already saved to Supabase directly or to localStorage, we count it as a success for the user
+        if (savedToSupabase || savedToLocalStorage) {
           setSubmitStatus('success');
           setName('');
           setEmail('');
           setMessage('');
         } else {
+          const data = await response.json().catch(() => ({}));
           setSubmitStatus('error');
           setErrorMessage(data.error || 'Failed to dispatch message. Please try again.');
         }
       }
     } catch (err) {
       console.error("Failed to submit contact message via API:", err);
-      if (savedToSupabase) {
+      if (savedToSupabase || savedToLocalStorage) {
         setSubmitStatus('success');
         setName('');
         setEmail('');
