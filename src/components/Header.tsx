@@ -82,7 +82,8 @@ export default function Header({ onOpenBooking }: HeaderProps) {
               { label: "Specialties", href: "#services" },
               { label: "Process", href: "#estimate-section" },
               { label: "Reviews", href: "#reviews" },
-              { label: "Service Area", href: "#coverage" }
+              { label: "Service Area", href: "#coverage" },
+              { label: "Contact", href: "#contact" }
             ].map((link, idx) => (
               <a
                 key={idx}

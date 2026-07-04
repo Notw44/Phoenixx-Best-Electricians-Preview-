@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { 
   Zap, Cpu, Sun, Fan, ToggleRight, Building2, 
   CheckCircle2, ArrowRight, Clock, ArrowLeft, 
-  Sparkles, Check, Phone, AlertCircle
+  Sparkles, Check, Phone, AlertCircle, UploadCloud, FileImage, X
 } from 'lucide-react';
 import { Lead } from '../types';
+import { supabase } from '../lib/supabase';
 
 interface BookingWizardProps {
   onLeadSubmitted: (newLead: Lead) => void;
@@ -22,6 +23,12 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
   const [preferredTime, setPreferredTime] = useState('Same Day Emergency');
   const [isCalibrating, setIsCalibrating] = useState(false);
   const [submittedLead, setSubmittedLead] = useState<Lead | null>(null);
+
+  // File upload state
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [fileName, setFileName] = useState('');
 
   const serviceOptions = [
     { id: 'panel_upgrade', label: 'Electrical Panel Upgrade', icon: Cpu, baseRange: 'Custom Quote', note: 'Expert load calculation' },
@@ -99,6 +106,93 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
     return serviceOptions.find(s => s.id === serviceType)?.label || '';
   };
 
+  // --- File Upload & Drag/Drop Handlers ---
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      await handleFileUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      await handleFileUpload(e.target.files[0]);
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!file) return;
+    setFileName(file.name);
+    setUploading(true);
+
+    if (!supabase) {
+      // Offline/Demo Mode fallback: Convert to data url base64 so it can be previewed immediately
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoUrl(reader.result as string);
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      
+      const { data, error } = await supabase.storage
+        .from('electrical-photos')
+        .upload(uniqueFileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        console.warn("Direct upload to Supabase bucket 'electrical-photos' failed. Converting to Base64 data URL fallback:", error.message);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPhotoUrl(reader.result as string);
+          setUploading(false);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const { data: { publicUrl } } = supabase.storage
+          .from('electrical-photos')
+          .getPublicUrl(uniqueFileName);
+        
+        setPhotoUrl(publicUrl);
+        setUploading(false);
+      }
+    } catch (err) {
+      console.error("Exception uploading to storage. Falling back to local Base64:", err);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoUrl(reader.result as string);
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const clearFile = () => {
+    setPhotoUrl('');
+    setFileName('');
+    setUploading(false);
+  };
+
   const handleSubmitBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !phone || !email) return;
@@ -116,7 +210,8 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
       scopeSize: selectedScopeLabel,
       details: details || 'No additional details provided',
       estimatedPrice: estimateValue,
-      preferredTime
+      preferredTime,
+      photoUrl
     };
 
     try {
@@ -147,9 +242,17 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
         scopeSize: selectedScopeLabel,
         details: details || 'No additional details provided',
         status: 'pending',
-        submittedAt: new Date().toLocaleString(),
+        submittedAt: new Date().toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric"
+        }) + " " + new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit"
+        }),
         estimatedPrice: estimateValue,
-        preferredTime
+        preferredTime,
+        photoUrl
       };
       setSubmittedLead(fallbackLead);
       onLeadSubmitted(fallbackLead);
@@ -171,6 +274,9 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
     setEmail('');
     setPreferredTime('Same Day Emergency');
     setSubmittedLead(null);
+    setPhotoUrl('');
+    setFileName('');
+    setUploading(false);
   };
 
   const selectedScopes = scopeOptions[serviceType as keyof typeof scopeOptions] || [];
@@ -476,6 +582,84 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
                   <option value="Tomorrow Afternoon" className="bg-[#111111] text-white">Tomorrow Afternoon (1PM - 5PM)</option>
                   <option value="Later this Week" className="bg-[#111111] text-white">Later this Week (Flexible Schedule)</option>
                 </select>
+              </div>
+            </div>
+
+            {/* File Upload Field */}
+            <div className="space-y-1.5 pt-1.5">
+              <label className="block text-[11px] font-semibold text-[#888888] uppercase tracking-wider text-left">
+                Photos of your Electrical Setup (Optional)
+              </label>
+              <div
+                onDragEnter={handleDrag}
+                onDragOver={handleDrag}
+                onDragLeave={handleDrag}
+                onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-2xl p-6 transition-all text-center flex flex-col items-center justify-center relative ${
+                  dragActive 
+                    ? 'border-[#FDE047] bg-[#FDE047]/5' 
+                    : photoUrl 
+                    ? 'border-emerald-500/50 bg-emerald-500/5' 
+                    : 'border-white/10 hover:border-white/20 bg-[#0C0C0C]'
+                }`}
+              >
+                <input
+                  type="file"
+                  id="photo-upload-input"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  disabled={uploading}
+                />
+                
+                {uploading ? (
+                  <div className="space-y-2 py-2 flex flex-col items-center justify-center">
+                    <span className="w-8 h-8 rounded-full border-2 border-t-[#FDE047] border-[#FDE047]/20 animate-spin inline-block" />
+                    <p className="text-xs text-neutral-400 font-medium">Uploading your image to secure storage...</p>
+                  </div>
+                ) : photoUrl ? (
+                  <div className="space-y-3 py-1 flex flex-col items-center justify-center">
+                    <div className="relative inline-block">
+                      <img 
+                        src={photoUrl} 
+                        alt="Uploaded preview" 
+                        className="max-h-32 rounded-xl object-cover border border-emerald-500/30"
+                        referrerPolicy="no-referrer"
+                      />
+                      <button
+                        type="button"
+                        onClick={clearFile}
+                        className="absolute -top-2 -right-2 p-1 bg-red-600 hover:bg-red-500 text-white rounded-full transition-all border border-red-500 cursor-pointer"
+                        title="Remove attachment"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="text-xs">
+                      <p className="text-emerald-400 font-semibold flex items-center justify-center gap-1">
+                        <Check className="w-4 h-4" /> Attached: {fileName || "image.png"}
+                      </p>
+                      <p className="text-[10px] text-neutral-500 mt-0.5">Will be dispatched with your inquiry details.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <label 
+                    htmlFor="photo-upload-input" 
+                    className="cursor-pointer py-2 w-full h-full flex flex-col items-center justify-center space-y-2"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-white/5 flex items-center justify-center text-neutral-400">
+                      <UploadCloud className="w-5 h-5 stroke-[1.5]" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-white">
+                        <span className="text-[#FDE047] hover:underline">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-[10px] text-neutral-500 mt-1">
+                        JPEG, PNG, WEBP (Max 5MB) • Clear wiring details or panel setups help accurate quoting
+                      </p>
+                    </div>
+                  </label>
+                )}
               </div>
             </div>
 

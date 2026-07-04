@@ -11,6 +11,7 @@ import BookingWizard from './components/BookingWizard';
 import ReviewsSection from './components/ReviewsSection';
 import InteractiveMap from './components/InteractiveMap';
 import OwnerConsole from './components/OwnerConsole';
+import ContactForm from './components/ContactForm';
 import ShaderBackground from '@/components/ui/asd';
 import ScrollExpandMedia from '@/components/ui/scroll-expansion-hero';
 import { LayoutGrid } from '@/components/ui/layout-grid';
@@ -592,6 +593,9 @@ export default function App() {
           </div>
         </div>
       </section>
+
+      {/* Contact Us Form */}
+      <ContactForm />
 
       {/* Luxury Footer Section */}
       <footer className="bg-[#0C0C0C] text-white pt-16 pb-8 border-t border-white/10">

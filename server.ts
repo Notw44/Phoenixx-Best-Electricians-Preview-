@@ -2,10 +2,43 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import { createServer as createViteServer } from "vite";
+import { createClient } from "@supabase/supabase-js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 const PORT = 3000;
 const DB_PATH = path.join(process.cwd(), "db.json");
+
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "";
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || "";
+
+const supabase = SUPABASE_URL && SUPABASE_ANON_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: false
+      }
+    })
+  : null;
+
+if (supabase) {
+  console.log("=========================================");
+  console.log("⚡ Supabase Client initialized successfully!");
+  console.log(`URL: ${SUPABASE_URL}`);
+  console.log("=========================================");
+} else {
+  console.log("=========================================");
+  console.log("⚠️ Supabase credentials not found.");
+  console.log("Falling back to local db.json storage.");
+  console.log("Add SUPABASE_URL and SUPABASE_ANON_KEY to .env to connect to Supabase.");
+  console.log("=========================================");
+}
+
+// Table presence flags to gracefully bypass missing Supabase tables and prevent noisy logs
+let isLeadsTableMissing = false;
+let isReviewsTableMissing = false;
+let isContactsTableMissing = false;
 
 interface Review {
   id: string;
@@ -30,11 +63,21 @@ interface Lead {
   submittedAt: string;
   estimatedPrice: string;
   preferredTime: string;
+  photoUrl?: string;
+}
+
+interface ContactMessage {
+  id?: string;
+  name: string;
+  email: string;
+  message: string;
+  submittedAt: string;
 }
 
 interface DBStructure {
   leads: Lead[];
   reviews: Review[];
+  contacts?: ContactMessage[];
 }
 
 const INITIAL_REVIEWS: Review[] = [
@@ -145,16 +188,18 @@ const INITIAL_LEADS: Lead[] = [
 // Read database
 function getDB(): DBStructure {
   if (!fs.existsSync(DB_PATH)) {
-    const initial = { leads: INITIAL_LEADS, reviews: INITIAL_REVIEWS };
+    const initial = { leads: INITIAL_LEADS, reviews: INITIAL_REVIEWS, contacts: [] };
     fs.writeFileSync(DB_PATH, JSON.stringify(initial, null, 2));
     return initial;
   }
   try {
     const data = fs.readFileSync(DB_PATH, "utf-8");
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    if (!parsed.contacts) parsed.contacts = [];
+    return parsed;
   } catch (e) {
     console.error("Error reading db.json, recreating with initial datasets:", e);
-    const initial = { leads: INITIAL_LEADS, reviews: INITIAL_REVIEWS };
+    const initial = { leads: INITIAL_LEADS, reviews: INITIAL_REVIEWS, contacts: [] };
     fs.writeFileSync(DB_PATH, JSON.stringify(initial, null, 2));
     return initial;
   }
@@ -172,23 +217,124 @@ function saveDB(db: DBStructure) {
 // Middlewares
 app.use(express.json());
 
+// --- Supabase Seeding Helper ---
+async function seedSupabaseIfNeeded() {
+  if (!supabase) return;
+  try {
+    // 1. Seed Leads
+    const { data: existingLeads, error: leadsError } = await supabase
+      .from("leads")
+      .select("id")
+      .limit(1);
+
+    if (leadsError) {
+      if (leadsError.message.includes("Could not find the table")) {
+        isLeadsTableMissing = true;
+        console.log("Supabase 'leads' table is missing from schema cache. Graceful local fallback active.");
+      } else {
+        console.log("Supabase 'leads' table check returned error:", leadsError.message);
+      }
+    } else {
+      isLeadsTableMissing = false;
+      if (!existingLeads || existingLeads.length === 0) {
+        console.log("Supabase 'leads' table is empty. Seeding initial leads...");
+        const { error: insertLeadsError } = await supabase
+          .from("leads")
+          .insert(INITIAL_LEADS);
+        if (insertLeadsError) {
+          console.log("Failed to seed initial leads in Supabase:", insertLeadsError.message);
+        } else {
+          console.log("Initial leads successfully seeded in Supabase!");
+        }
+      }
+    }
+
+    // 2. Seed Reviews
+    const { data: existingReviews, error: reviewsError } = await supabase
+      .from("reviews")
+      .select("id")
+      .limit(1);
+
+    if (reviewsError) {
+      if (reviewsError.message.includes("Could not find the table")) {
+        isReviewsTableMissing = true;
+        console.log("Supabase 'reviews' table is missing from schema cache. Graceful local fallback active.");
+      } else {
+        console.log("Supabase 'reviews' table check returned error:", reviewsError.message);
+      }
+    } else {
+      isReviewsTableMissing = false;
+      if (!existingReviews || existingReviews.length === 0) {
+        console.log("Supabase 'reviews' table is empty. Seeding initial reviews...");
+        const { error: insertReviewsError } = await supabase
+          .from("reviews")
+          .insert(INITIAL_REVIEWS);
+        if (insertReviewsError) {
+          console.log("Failed to seed initial reviews in Supabase:", insertReviewsError.message);
+        } else {
+          console.log("Initial reviews successfully seeded in Supabase!");
+        }
+      }
+    }
+
+    // 3. Check Contacts
+    const { error: contactsError } = await supabase
+      .from("contacts")
+      .select("id")
+      .limit(1);
+
+    if (contactsError) {
+      if (contactsError.message.includes("Could not find the table")) {
+        isContactsTableMissing = true;
+        console.log("Supabase 'contacts' table is missing from schema cache. Graceful local fallback active.");
+      } else {
+        console.log("Supabase 'contacts' table check returned error:", contactsError.message);
+      }
+    } else {
+      isContactsTableMissing = false;
+    }
+  } catch (err) {
+    console.log("Unexpected error during Supabase schema discovery:", err);
+  }
+}
+
 // --- API Endpoints ---
 
 // Get all leads
-app.get("/api/leads", (req, res) => {
+app.get("/api/leads", async (req, res) => {
+  if (supabase && !isLeadsTableMissing) {
+    try {
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .order("submittedAt", { ascending: false });
+
+      if (error) {
+        if (error.message.includes("Could not find the table")) {
+          isLeadsTableMissing = true;
+          console.log("Supabase 'leads' table is missing. Falling back to local database.");
+        } else {
+          console.log("Supabase select leads info:", error.message);
+        }
+      } else {
+        return res.json(data || []);
+      }
+    } catch (e) {
+      console.log("Supabase select leads exception:", e);
+    }
+  }
   const db = getDB();
   res.json(db.leads);
 });
 
 // Create a new lead
-app.post("/api/leads", (req, res) => {
-  const { name, phone, email, serviceNeeded, scopeSize, details, estimatedPrice, preferredTime } = req.body;
+app.post("/api/leads", async (req, res) => {
+  const { name, phone, email, serviceNeeded, scopeSize, details, estimatedPrice, preferredTime, photoUrl } = req.body;
   
   if (!name || !phone || !email) {
     return res.status(400).json({ error: "Name, phone, and email are required fields." });
   }
 
-  const db = getDB();
   const newLead: Lead = {
     id: "PBE-" + Math.floor(100000 + Math.random() * 900000),
     name,
@@ -207,22 +353,70 @@ app.post("/api/leads", (req, res) => {
       minute: "2-digit"
     }),
     estimatedPrice: estimatedPrice || "Custom Quote",
-    preferredTime: preferredTime || "Flexible"
+    preferredTime: preferredTime || "Flexible",
+    photoUrl: photoUrl || ""
   };
 
+  if (supabase && !isLeadsTableMissing) {
+    try {
+      const { data, error } = await supabase
+        .from("leads")
+        .insert([newLead])
+        .select()
+        .single();
+
+      if (error) {
+        if (error.message.includes("Could not find the table")) {
+          isLeadsTableMissing = true;
+          console.log("Supabase 'leads' table is missing. Falling back to local database.");
+        } else {
+          console.log("Supabase insert lead info:", error.message);
+        }
+      } else {
+        return res.status(201).json(data);
+      }
+    } catch (e) {
+      console.log("Supabase insert lead exception:", e);
+    }
+  }
+
+  const db = getDB();
   db.leads.unshift(newLead);
   saveDB(db);
-
   res.status(201).json(newLead);
 });
 
 // Update lead status
-app.patch("/api/leads/:id/status", (req, res) => {
+app.patch("/api/leads/:id/status", async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
   if (!["pending", "dispatched", "completed"].includes(status)) {
     return res.status(400).json({ error: "Invalid status value." });
+  }
+
+  if (supabase && !isLeadsTableMissing) {
+    try {
+      const { data, error } = await supabase
+        .from("leads")
+        .update({ status })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) {
+        if (error.message.includes("Could not find the table")) {
+          isLeadsTableMissing = true;
+          console.log("Supabase 'leads' table is missing. Falling back to local database.");
+        } else {
+          console.log("Supabase update lead status info:", error.message);
+        }
+      } else {
+        return res.json(data);
+      }
+    } catch (e) {
+      console.log("Supabase update lead status exception:", e);
+    }
   }
 
   const db = getDB();
@@ -234,13 +428,35 @@ app.patch("/api/leads/:id/status", (req, res) => {
 
   db.leads[leadIndex].status = status;
   saveDB(db);
-
   res.json(db.leads[leadIndex]);
 });
 
 // Delete a lead
-app.delete("/api/leads/:id", (req, res) => {
+app.delete("/api/leads/:id", async (req, res) => {
   const { id } = req.params;
+
+  if (supabase && !isLeadsTableMissing) {
+    try {
+      const { error } = await supabase
+        .from("leads")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        if (error.message.includes("Could not find the table")) {
+          isLeadsTableMissing = true;
+          console.log("Supabase 'leads' table is missing. Falling back to local database.");
+        } else {
+          console.log("Supabase delete lead info:", error.message);
+        }
+      } else {
+        return res.json({ success: true, message: "Lead successfully deleted from Supabase." });
+      }
+    } catch (e) {
+      console.log("Supabase delete lead exception:", e);
+    }
+  }
+
   const db = getDB();
   const updatedLeads = db.leads.filter((l) => l.id !== id);
 
@@ -250,12 +466,33 @@ app.delete("/api/leads/:id", (req, res) => {
 
   db.leads = updatedLeads;
   saveDB(db);
-
   res.json({ success: true, message: "Lead successfully deleted." });
 });
 
 // Purge all leads / Reset
-app.post("/api/leads/purge", (req, res) => {
+app.post("/api/leads/purge", async (req, res) => {
+  if (supabase && !isLeadsTableMissing) {
+    try {
+      const { error } = await supabase
+        .from("leads")
+        .delete()
+        .neq("id", "");
+
+      if (error) {
+        if (error.message.includes("Could not find the table")) {
+          isLeadsTableMissing = true;
+          console.log("Supabase 'leads' table is missing. Falling back to local database.");
+        } else {
+          console.log("Supabase purge leads info:", error.message);
+        }
+      } else {
+        return res.json({ success: true, message: "All leads successfully purged from Supabase." });
+      }
+    } catch (e) {
+      console.log("Supabase purge leads exception:", e);
+    }
+  }
+
   const db = getDB();
   db.leads = [];
   saveDB(db);
@@ -263,7 +500,32 @@ app.post("/api/leads/purge", (req, res) => {
 });
 
 // Reset leads back to original seed leads
-app.post("/api/leads/reset", (req, res) => {
+app.post("/api/leads/reset", async (req, res) => {
+  if (supabase && !isLeadsTableMissing) {
+    try {
+      // Delete existing
+      await supabase.from("leads").delete().neq("id", "");
+      // Re-insert
+      const { data, error } = await supabase
+        .from("leads")
+        .insert(INITIAL_LEADS)
+        .select();
+
+      if (error) {
+        if (error.message.includes("Could not find the table")) {
+          isLeadsTableMissing = true;
+          console.log("Supabase 'leads' table is missing. Falling back to local database.");
+        } else {
+          console.log("Supabase reset leads info:", error.message);
+        }
+      } else {
+        return res.json(data || []);
+      }
+    } catch (e) {
+      console.log("Supabase reset leads exception:", e);
+    }
+  }
+
   const db = getDB();
   db.leads = [...INITIAL_LEADS];
   saveDB(db);
@@ -271,20 +533,40 @@ app.post("/api/leads/reset", (req, res) => {
 });
 
 // Get all reviews
-app.get("/api/reviews", (req, res) => {
+app.get("/api/reviews", async (req, res) => {
+  if (supabase && !isReviewsTableMissing) {
+    try {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("*")
+        .order("id", { ascending: false });
+
+      if (error) {
+        if (error.message.includes("Could not find the table")) {
+          isReviewsTableMissing = true;
+          console.log("Supabase 'reviews' table is missing. Falling back to local database.");
+        } else {
+          console.log("Supabase select reviews info:", error.message);
+        }
+      } else {
+        return res.json(data || []);
+      }
+    } catch (e) {
+      console.log("Supabase select reviews exception:", e);
+    }
+  }
   const db = getDB();
   res.json(db.reviews);
 });
 
 // Create a review
-app.post("/api/reviews", (req, res) => {
+app.post("/api/reviews", async (req, res) => {
   const { author, rating, text, category, tags } = req.body;
 
   if (!author || !text) {
     return res.status(400).json({ error: "Author and review text are required fields." });
   }
 
-  const db = getDB();
   const newReview: Review = {
     id: "REV-" + Math.floor(1000 + Math.random() * 9000),
     author,
@@ -296,15 +578,61 @@ app.post("/api/reviews", (req, res) => {
     avatarUrl: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 500000)}?w=150`
   };
 
+  if (supabase && !isReviewsTableMissing) {
+    try {
+      const { data, error } = await supabase
+        .from("reviews")
+        .insert([newReview])
+        .select()
+        .single();
+
+      if (error) {
+        if (error.message.includes("Could not find the table")) {
+          isReviewsTableMissing = true;
+          console.log("Supabase 'reviews' table is missing. Falling back to local database.");
+        } else {
+          console.log("Supabase insert review info:", error.message);
+        }
+      } else {
+        return res.status(201).json(data);
+      }
+    } catch (e) {
+      console.log("Supabase insert review exception:", e);
+    }
+  }
+
+  const db = getDB();
   db.reviews.unshift(newReview);
   saveDB(db);
-
   res.status(201).json(newReview);
 });
 
 // Delete a review
-app.delete("/api/reviews/:id", (req, res) => {
+app.delete("/api/reviews/:id", async (req, res) => {
   const { id } = req.params;
+
+  if (supabase && !isReviewsTableMissing) {
+    try {
+      const { error } = await supabase
+        .from("reviews")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        if (error.message.includes("Could not find the table")) {
+          isReviewsTableMissing = true;
+          console.log("Supabase 'reviews' table is missing. Falling back to local database.");
+        } else {
+          console.log("Supabase delete review info:", error.message);
+        }
+      } else {
+        return res.json({ success: true, message: "Review successfully deleted from Supabase." });
+      }
+    } catch (e) {
+      console.log("Supabase delete review exception:", e);
+    }
+  }
+
   const db = getDB();
   const updatedReviews = db.reviews.filter((r) => r.id !== id);
 
@@ -314,8 +642,158 @@ app.delete("/api/reviews/:id", (req, res) => {
 
   db.reviews = updatedReviews;
   saveDB(db);
-
   res.json({ success: true, message: "Review successfully deleted." });
+});
+
+// --- Contacts API Endpoints ---
+
+// Get all contacts
+app.get("/api/contacts", async (req, res) => {
+  if (supabase && !isContactsTableMissing) {
+    try {
+      const { data, error } = await supabase
+        .from("contacts")
+        .select("*")
+        .order("submittedAt", { ascending: false });
+
+      if (error) {
+        if (error.message.includes("Could not find the table")) {
+          isContactsTableMissing = true;
+          console.log("Supabase 'contacts' table is missing. Falling back to local database.");
+        } else {
+          console.log("Supabase select contacts info:", error.message);
+        }
+      } else {
+        return res.json(data || []);
+      }
+    } catch (e) {
+      console.log("Supabase select contacts exception:", e);
+    }
+  }
+  const db = getDB();
+  res.json(db.contacts || []);
+});
+
+// Create a new contact message
+app.post("/api/contacts", async (req, res) => {
+  const { name, email, message, submittedAt } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: "Name, email, and message are required fields." });
+  }
+
+  const newContact: ContactMessage = {
+    id: "CON-" + Math.floor(100000 + Math.random() * 900000),
+    name: name.trim(),
+    email: email.trim(),
+    message: message.trim(),
+    submittedAt: submittedAt || new Date().toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric"
+    }) + " " + new Date().toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit"
+    })
+  };
+
+  if (supabase && !isContactsTableMissing) {
+    try {
+      const { data, error } = await supabase
+        .from("contacts")
+        .insert([newContact])
+        .select()
+        .single();
+
+      if (error) {
+        if (error.message.includes("Could not find the table")) {
+          isContactsTableMissing = true;
+          console.log("Supabase 'contacts' table is missing. Falling back to local database.");
+        } else {
+          console.log("Supabase insert contact info:", error.message);
+        }
+      } else {
+        return res.status(201).json(data);
+      }
+    } catch (e) {
+      console.log("Supabase insert contact exception:", e);
+    }
+  }
+
+  const db = getDB();
+  if (!db.contacts) db.contacts = [];
+  db.contacts.unshift(newContact);
+  saveDB(db);
+  res.status(201).json(newContact);
+});
+
+// Delete a contact
+app.delete("/api/contacts/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (supabase && !isContactsTableMissing) {
+    try {
+      const { error } = await supabase
+        .from("contacts")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        if (error.message.includes("Could not find the table")) {
+          isContactsTableMissing = true;
+          console.log("Supabase 'contacts' table is missing. Falling back to local database.");
+        } else {
+          console.log("Supabase delete contact info:", error.message);
+        }
+      } else {
+        return res.json({ success: true, message: "Contact successfully deleted from Supabase." });
+      }
+    } catch (e) {
+      console.log("Supabase delete contact exception:", e);
+    }
+  }
+
+  const db = getDB();
+  if (!db.contacts) db.contacts = [];
+  const updatedContacts = db.contacts.filter((c) => c.id !== id);
+
+  if (db.contacts.length === updatedContacts.length) {
+    return res.status(404).json({ error: "Contact message not found." });
+  }
+
+  db.contacts = updatedContacts;
+  saveDB(db);
+  res.json({ success: true, message: "Contact message successfully deleted." });
+});
+
+// Purge all contacts
+app.post("/api/contacts/purge", async (req, res) => {
+  if (supabase && !isContactsTableMissing) {
+    try {
+      const { error } = await supabase
+        .from("contacts")
+        .delete()
+        .neq("id", "");
+
+      if (error) {
+        if (error.message.includes("Could not find the table")) {
+          isContactsTableMissing = true;
+          console.log("Supabase 'contacts' table is missing. Falling back to local database.");
+        } else {
+          console.log("Supabase purge contacts info:", error.message);
+        }
+      } else {
+        return res.json({ success: true, message: "All contacts successfully purged from Supabase." });
+      }
+    } catch (e) {
+      console.log("Supabase purge contacts exception:", e);
+    }
+  }
+
+  const db = getDB();
+  db.contacts = [];
+  saveDB(db);
+  res.json({ success: true, message: "All contacts successfully purged." });
 });
 
 
@@ -338,8 +816,12 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  app.listen(PORT, "0.0.0.0", async () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    // Run seed checking asynchronously so it doesn't block server startup
+    if (supabase) {
+      await seedSupabaseIfNeeded();
+    }
   });
 }
 

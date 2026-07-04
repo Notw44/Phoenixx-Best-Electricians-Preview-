@@ -30,6 +30,15 @@ export interface Lead {
   submittedAt: string;
   estimatedPrice: string;
   preferredTime: string;
+  photoUrl?: string;
+}
+
+export interface ContactMessage {
+  id?: string;
+  name: string;
+  email: string;
+  message: string;
+  submittedAt: string;
 }
 
 export interface QuoteStep {
