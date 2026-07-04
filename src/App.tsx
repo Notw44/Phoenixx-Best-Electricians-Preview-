@@ -30,33 +30,10 @@ function AnimatedCounter({ value, duration = 1.5, suffix = "" }: { value: number
   const [count, setCount] = useState(0);
   const elementRef = useRef<HTMLSpanElement | null>(null);
   const [started, setStarted] = useState(false);
-const handleAddReview = async (newReview: Review) => {
-  ...
+
 };
 
-const handleAddQuote = async (newQuote) => {
-  if (supabase) {
-    try {
-      const { error } = await supabase
-        .from('quotes')
-        .insert([{
-          name: newQuote.name,
-          email: newQuote.email,
-          service: newQuote.service,
-          message: newQuote.message,
-          status: "new"
-        }]);
 
-      if (error) {
-        console.warn("Quote insert failed:", error.message);
-      } else {
-        console.log("Quote submitted successfully.");
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }
-};
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -208,7 +185,7 @@ export default function App() {
             tags: newReview.tags
           })
         });
-
+console.log("QUOTE FUNCTION TRIGGERED", newQuote);
         if (response.ok) {
           console.log("Review submitted successfully via backend API (pending approval).");
         }
@@ -217,29 +194,7 @@ export default function App() {
       }
     }
   };
-const handleAddQuote = async (newQuote) => {
-  if (supabase) {
-    try {
-      const { error } = await supabase
-        .from('quotes')
-        .insert([{
-          name: newQuote.name,
-          email: newQuote.email,
-          service: newQuote.service,
-          message: newQuote.message,
-          status: "new"
-        }]);
-console.log("QUOTE FLOW STARTED");
-      if (error) {
-        console.warn("Quote insert failed:", error.message);
-      } else {
-        console.log("Quote submitted successfully.");
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }
-};
+
     fetchApprovedReviews();
   }, []);
 
@@ -259,7 +214,28 @@ console.log("QUOTE FLOW STARTED");
     console.log('New lead registered:', newLead);
   };
 
-  const handleAddReview = async (newReview: Review) => {
+  
+    if (!submittedToSupabase) {
+      try {
+        const response = await fetch('/api/reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            author: newReview.author,
+            rating: newReview.rating,
+            text: newReview.text,
+            category: newReview.category,
+            tags: newReview.tags
+          })
+        });
+        if (response.ok) {
+          console.log("Review submitted successfully via backend API (pending approval).");
+        }
+      } catch (err) {
+        console.error('Network error adding review:', err);
+      }
+    }
+    const handleAddReview = async (newReview: Review) => {
     let submittedToSupabase = false;
 
     if (supabase) {
@@ -306,27 +282,6 @@ console.log("QUOTE FLOW STARTED");
 };
     }
 
-    if (!submittedToSupabase) {
-      try {
-        const response = await fetch('/api/reviews', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            author: newReview.author,
-            rating: newReview.rating,
-            text: newReview.text,
-            category: newReview.category,
-            tags: newReview.tags
-          })
-        });
-        if (response.ok) {
-          console.log("Review submitted successfully via backend API (pending approval).");
-        }
-      } catch (err) {
-        console.error('Network error adding review:', err);
-      }
-    }
-    
     // NOTE: We DO NOT append the review to the local reviews state immediately!
     // Since it is approved = false, it must NOT appear on the home page until Tracy approves it in OwnerConsole.
   };
