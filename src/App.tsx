@@ -30,7 +30,33 @@ function AnimatedCounter({ value, duration = 1.5, suffix = "" }: { value: number
   const [count, setCount] = useState(0);
   const elementRef = useRef<HTMLSpanElement | null>(null);
   const [started, setStarted] = useState(false);
+const handleAddReview = async (newReview: Review) => {
+  ...
+};
 
+const handleAddQuote = async (newQuote) => {
+  if (supabase) {
+    try {
+      const { error } = await supabase
+        .from('quotes')
+        .insert([{
+          name: newQuote.name,
+          email: newQuote.email,
+          service: newQuote.service,
+          message: newQuote.message,
+          status: "new"
+        }]);
+
+      if (error) {
+        console.warn("Quote insert failed:", error.message);
+      } else {
+        console.log("Quote submitted successfully.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+};
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
