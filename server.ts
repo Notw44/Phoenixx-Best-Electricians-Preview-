@@ -70,6 +70,7 @@ interface ContactMessage {
   id?: string;
   name: string;
   email: string;
+  phone?: string;
   message: string;
   submittedAt: string;
 }
@@ -680,7 +681,7 @@ app.get("/api/contacts", async (req, res) => {
       const { data, error } = await supabase
         .from("contacts")
         .select("*")
-        .order("submittedAt", { ascending: false });
+        .order("id", { ascending: false });
 
       if (error) {
         if (error.message.includes("Could not find the table")) {
@@ -690,7 +691,15 @@ app.get("/api/contacts", async (req, res) => {
           console.log("Supabase select contacts info:", error.message);
         }
       } else {
-        return res.json(data || []);
+        const mapped = (data || []).map((c: any) => ({
+          id: 'CON-' + c.id,
+          name: c.name,
+          email: c.email,
+          phone: c.phone || 'No phone provided',
+          message: c.message,
+          submittedAt: c.created_at ? new Date(c.created_at).toLocaleString() : 'Just now'
+        }));
+        return res.json(mapped);
       }
     } catch (e) {
       console.log("Supabase select contacts exception:", e);
@@ -702,16 +711,19 @@ app.get("/api/contacts", async (req, res) => {
 
 // Create a new contact message
 app.post("/api/contacts", async (req, res) => {
-  const { name, email, message, submittedAt } = req.body;
+  const { name, email, message, submittedAt, phone, skipSupabase } = req.body;
 
   if (!name || !email || !message) {
     return res.status(400).json({ error: "Name, email, and message are required fields." });
   }
 
+  const phoneValue = phone ? phone.trim() : null;
+
   const newContact: ContactMessage = {
     id: "CON-" + Math.floor(100000 + Math.random() * 900000),
     name: name.trim(),
     email: email.trim(),
+    phone: phoneValue || undefined,
     message: message.trim(),
     submittedAt: submittedAt || new Date().toLocaleDateString("en-US", {
       month: "short",
@@ -723,11 +735,16 @@ app.post("/api/contacts", async (req, res) => {
     })
   };
 
-  if (supabase && !isContactsTableMissing) {
+  if (supabase && !isContactsTableMissing && !skipSupabase) {
     try {
       const { data, error } = await supabase
         .from("contacts")
-        .insert([newContact])
+        .insert([{
+          name: name.trim(),
+          email: email.trim(),
+          phone: phoneValue,
+          message: message.trim()
+        }])
         .select()
         .single();
 
@@ -739,7 +756,15 @@ app.post("/api/contacts", async (req, res) => {
           console.log("Supabase insert contact info:", error.message);
         }
       } else {
-        return res.status(201).json(data);
+        const responseData = {
+          id: 'CON-' + data.id,
+          name: data.name,
+          email: data.email,
+          phone: data.phone || 'No phone provided',
+          message: data.message,
+          submittedAt: data.created_at ? new Date(data.created_at).toLocaleString() : new Date().toLocaleString()
+        };
+        return res.status(201).json(responseData);
       }
     } catch (e) {
       console.log("Supabase insert contact exception:", e);
@@ -756,13 +781,14 @@ app.post("/api/contacts", async (req, res) => {
 // Delete a contact
 app.delete("/api/contacts/:id", async (req, res) => {
   const { id } = req.params;
+  const numericId = id.startsWith("CON-") ? id.replace("CON-", "") : id;
 
   if (supabase && !isContactsTableMissing) {
     try {
       const { error } = await supabase
         .from("contacts")
         .delete()
-        .eq("id", id);
+        .eq("id", numericId);
 
       if (error) {
         if (error.message.includes("Could not find the table")) {
@@ -799,7 +825,7 @@ app.post("/api/contacts/purge", async (req, res) => {
       const { error } = await supabase
         .from("contacts")
         .delete()
-        .neq("id", "");
+        .neq("id", 0);
 
       if (error) {
         if (error.message.includes("Could not find the table")) {

@@ -56,15 +56,28 @@ export default function ContactForm() {
           savedToSupabase = true;
           console.log("Contact successfully saved directly to Supabase.");
         } else {
-          console.warn("Direct Supabase insert failed, trying server endpoint:", error.message);
+          console.error("Direct Supabase insert failed:", error.message);
+          setSubmitStatus('error');
+          setErrorMessage("Supabase error: " + error.message);
+          setIsSubmitting(false);
+          return;
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Direct Supabase exception:", err);
+        setSubmitStatus('error');
+        setErrorMessage("Supabase exception: " + (err.message || err));
+        setIsSubmitting(false);
+        return;
       }
+    } else {
+      console.error("Supabase client is not configured/initialized. Check VITE_SUPABASE_URL and VITE_SUPABASE_KEY.");
+      setSubmitStatus('error');
+      setErrorMessage("Supabase is not configured. Please define VITE_SUPABASE_URL and VITE_SUPABASE_KEY in your environment.");
+      setIsSubmitting(false);
+      return;
     }
 
     // 2. Always log to localStorage so it is available locally in the Operator Portal on Vercel
-    let savedToLocalStorage = false;
     try {
       const existing = JSON.parse(localStorage.getItem('pbe_contacts') || '[]');
       const newContact = {
@@ -73,20 +86,19 @@ export default function ContactForm() {
       };
       existing.unshift(newContact);
       localStorage.setItem('pbe_contacts', JSON.stringify(existing));
-      savedToLocalStorage = true;
-      console.log("Contact successfully saved to localStorage fallback.");
+      console.log("Contact successfully logged to local storage.");
     } catch (lsErr) {
       console.warn("Failed to write contact to localStorage:", lsErr);
     }
 
-    // 3. Always sync/fallback with the server-side API to maintain db.json consistency and server-side Supabase redundancy
+    // 3. Sync/fallback with the server-side API to maintain db.json consistency, passing skipSupabase: true
     try {
       const response = await fetch('/api/contacts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(contactData)
+        body: JSON.stringify({ ...contactData, skipSupabase: savedToSupabase })
       });
 
       if (response.ok) {
@@ -96,30 +108,32 @@ export default function ContactForm() {
         setPhone('');
         setMessage('');
       } else {
-        // If we already saved to Supabase directly or to localStorage, we count it as a success for the user
-        if (savedToSupabase || savedToLocalStorage) {
+        const data = await response.json().catch(() => ({}));
+        // If Supabase already succeeded, we still count as success but log a sync warning
+        if (savedToSupabase) {
           setSubmitStatus('success');
           setName('');
           setEmail('');
           setPhone('');
           setMessage('');
+          console.warn("Server sync returned a non-ok status, but direct Supabase insert succeeded:", data.error);
         } else {
-          const data = await response.json().catch(() => ({}));
           setSubmitStatus('error');
-          setErrorMessage(data.error || 'Failed to dispatch message. Please try again.');
+          setErrorMessage(data.error || 'Failed to sync with server.');
         }
       }
     } catch (err) {
-      console.error("Failed to submit contact message via API:", err);
-      if (savedToSupabase || savedToLocalStorage) {
+      console.error("Failed to sync contact message via API:", err);
+      if (savedToSupabase) {
         setSubmitStatus('success');
         setName('');
         setEmail('');
         setPhone('');
         setMessage('');
+        console.info("Server sync network error, but direct Supabase insert succeeded.");
       } else {
         setSubmitStatus('error');
-        setErrorMessage('A network error occurred. Please check your connection and try again.');
+        setErrorMessage('A network error occurred during server sync.');
       }
     } finally {
       setIsSubmitting(false);
@@ -249,6 +263,7 @@ export default function ContactForm() {
                       </div>
                       <input
                         type="text"
+                        name="name"
                         required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -270,6 +285,7 @@ export default function ContactForm() {
                       </div>
                       <input
                         type="email"
+                        name="email"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -291,6 +307,7 @@ export default function ContactForm() {
                       </div>
                       <input
                         type="tel"
+                        name="phone"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="(602) 555-0199"
@@ -310,6 +327,7 @@ export default function ContactForm() {
                         <MessageSquare className="w-4 h-4" />
                       </div>
                       <textarea
+                        name="message"
                         required
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
