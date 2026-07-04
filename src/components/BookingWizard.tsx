@@ -24,43 +24,43 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
   const [submittedLead, setSubmittedLead] = useState<Lead | null>(null);
 
   const serviceOptions = [
-    { id: 'panel_upgrade', label: 'Electrical Panel Upgrade', icon: Cpu, baseRange: '$1,800 - $3,500', note: 'Expert load calculation' },
-    { id: 'solar_installation', label: 'Smart Solar Solutions', icon: Sun, baseRange: '$12k - $25k', note: 'Includes premium consultations' },
-    { id: 'breaker_troubleshooting', label: 'Breaker Repair & Troubleshooting', icon: Zap, baseRange: '$150 - $450', note: 'Emergency dispatch available' },
-    { id: 'ceiling_fan_lighting', label: 'Ceiling Fan / Fixture Install', icon: Fan, baseRange: '$120 - $350', note: 'Perfect for Phoenix heat' },
-    { id: 'switches_outlets', label: 'Smart Switches & Outlets', icon: ToggleRight, baseRange: '$80 - $180', note: 'Upgraded dimmers & safety GFCIs' },
+    { id: 'panel_upgrade', label: 'Electrical Panel Upgrade', icon: Cpu, baseRange: 'Custom Quote', note: 'Expert load calculation' },
+    { id: 'solar_installation', label: 'Smart Solar Solutions', icon: Sun, baseRange: 'Custom Quote', note: 'Includes premium consultations' },
+    { id: 'breaker_troubleshooting', label: 'Breaker Repair & Troubleshooting', icon: Zap, baseRange: 'Custom Quote', note: 'Emergency dispatch available' },
+    { id: 'ceiling_fan_lighting', label: 'Ceiling Fan / Fixture Install', icon: Fan, baseRange: 'Custom Quote', note: 'Perfect for Phoenix heat' },
+    { id: 'switches_outlets', label: 'Smart Switches & Outlets', icon: ToggleRight, baseRange: 'Custom Quote', note: 'Upgraded dimmers & safety GFCIs' },
     { id: 'condo_work', label: 'Condo & specialized code work', icon: Building2, baseRange: 'Custom Quote', note: 'HOA & multi-family compliant' },
   ];
 
   const scopeOptions = {
     panel_upgrade: [
-      { id: '100_to_200', label: 'Standard 100A to 200A main service', price: '$1,800 - $2,400', duration: '1 Day' },
-      { id: 'heavy_duty_320', label: 'Heavy duty 320A/400A main panel', price: '$2,800 - $3,800', duration: '1-2 Days' },
-      { id: 'subpanel_add', label: 'Add 100A subpanel (Garage/ADU)', price: '$950 - $1,500', duration: '1 Day' }
+      { id: '100_to_200', label: 'Standard 100A to 200A main service', price: 'Custom Quote', duration: '1 Day' },
+      { id: 'heavy_duty_320', label: 'Heavy duty 320A/400A main panel', price: 'Custom Quote', duration: '1-2 Days' },
+      { id: 'subpanel_add', label: 'Add 100A subpanel (Garage/ADU)', price: 'Custom Quote', duration: '1 Day' }
     ],
     solar_installation: [
-      { id: 'standard_solar', label: 'Standard Residential Array (5-8kW)', price: '$12,000 - $16,000', duration: '2-3 Days' },
-      { id: 'premium_solar_battery', label: 'Premium Solar + Battery Backup (Tesla Powerwall)', price: '$19,000 - $26,000', duration: '3-4 Days' },
-      { id: 'consultation', label: 'Professional consultation & shade analysis', price: '$0 (Complimentary)', duration: '1 Hour' }
+      { id: 'standard_solar', label: 'Standard Residential Array (5-8kW)', price: 'Custom Quote', duration: '2-3 Days' },
+      { id: 'premium_solar_battery', label: 'Premium Solar + Battery Backup (Tesla Powerwall)', price: 'Custom Quote', duration: '3-4 Days' },
+      { id: 'consultation', label: 'Professional consultation & shade analysis', price: 'Complimentary', duration: '1 Hour' }
     ],
     breaker_troubleshooting: [
-      { id: 'single_breaker_trip', label: 'Single circuit breaker trips continuously', price: '$150 - $280', duration: '1 Hour' },
-      { id: 'partial_outage', label: 'Partial house power loss / burning smell', price: '$250 - $490', duration: '1-2 Hours' },
-      { id: 'gfci_fault', label: 'Bathroom/Kitchen GFCI fault troubleshooting', price: '$120 - $220', duration: '1 Hour' }
+      { id: 'single_breaker_trip', label: 'Single circuit breaker trips continuously', price: 'Custom Quote', duration: '1 Hour' },
+      { id: 'partial_outage', label: 'Partial house power loss / burning smell', price: 'Custom Quote', duration: '1-2 Hours' },
+      { id: 'gfci_fault', label: 'Bathroom/Kitchen GFCI fault troubleshooting', price: 'Custom Quote', duration: '1 Hour' }
     ],
     ceiling_fan_lighting: [
-      { id: 'single_fan_install', label: 'Assemble and hang 1 ceiling fan', price: '$130 - $220', duration: '1 Hour' },
-      { id: 'multi_fan_install', label: 'Install 3+ ceiling fans (Package rate)', price: '$350 - $550', duration: '2-3 Hours' },
-      { id: 'recessed_led', label: 'Install architectural recessed LEDs (6-pack)', price: '$480 - $750', duration: '3 Hours' }
+      { id: 'single_fan_install', label: 'Assemble and hang 1 ceiling fan', price: 'Custom Quote', duration: '1 Hour' },
+      { id: 'multi_fan_install', label: 'Install 3+ ceiling fans (Package rate)', price: 'Custom Quote', duration: '2-3 Hours' },
+      { id: 'recessed_led', label: 'Install architectural recessed LEDs (6-pack)', price: 'Custom Quote', duration: '3 Hours' }
     ],
     switches_outlets: [
-      { id: 'smart_switch_setup', label: 'Install smart dimmers / custom Lutron switches', price: '$90 - $160', duration: '1 Hour' },
-      { id: 'gfci_upgrade', label: 'Install safety GFCI outlets in wet area', price: '$85 - $150', duration: '1 Hour' },
-      { id: 'ev_outlet', label: 'Install dedicated NEMA 14-50 EV charging outlet', price: '$450 - $850', duration: '2 Hours' }
+      { id: 'smart_switch_setup', label: 'Install smart dimmers / custom Lutron switches', price: 'Custom Quote', duration: '1 Hour' },
+      { id: 'gfci_upgrade', label: 'Install safety GFCI outlets in wet area', price: 'Custom Quote', duration: '1 Hour' },
+      { id: 'ev_outlet', label: 'Install dedicated NEMA 14-50 EV charging outlet', price: 'Custom Quote', duration: '2 Hours' }
     ],
     condo_work: [
-      { id: 'condo_general', label: 'Standard electrical update inside unit', price: '$200 - $500', duration: 'Half Day' },
-      { id: 'ho_review', label: 'Complete structural update meeting HOA specifications', price: 'Custom Estimate', duration: '1 Day' }
+      { id: 'condo_general', label: 'Standard electrical update inside unit', price: 'Custom Quote', duration: 'Half Day' },
+      { id: 'ho_review', label: 'Complete structural update meeting HOA specifications', price: 'Custom Quote', duration: '1 Day' }
     ]
   };
 
@@ -99,7 +99,7 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
     return serviceOptions.find(s => s.id === serviceType)?.label || '';
   };
 
-  const handleSubmitBooking = (e: React.FormEvent) => {
+  const handleSubmitBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !phone || !email) return;
 
@@ -108,27 +108,56 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
     const serviceScopes = scopeOptions[serviceType as keyof typeof scopeOptions] || [];
     const selectedScopeLabel = serviceScopes.find(s => s.id === scopeSize)?.label || '';
 
-    const newLead: Lead = {
-      id: 'PBE-' + Math.floor(100000 + Math.random() * 900000),
+    const leadPayload = {
       name,
       phone,
       email,
       serviceNeeded: serviceLabel,
       scopeSize: selectedScopeLabel,
       details: details || 'No additional details provided',
-      status: 'pending',
-      submittedAt: new Date().toLocaleString(),
       estimatedPrice: estimateValue,
       preferredTime
     };
 
-    // Save lead to local storage for realistic persistence
-    const savedLeads = JSON.parse(localStorage.getItem('pbe_leads') || '[]');
-    savedLeads.unshift(newLead);
-    localStorage.setItem('pbe_leads', JSON.stringify(savedLeads));
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(leadPayload)
+      });
+      if (response.ok) {
+        const savedLead: Lead = await response.json();
+        setSubmittedLead(savedLead);
+        onLeadSubmitted(savedLead);
 
-    setSubmittedLead(newLead);
-    onLeadSubmitted(newLead);
+        const savedLeads = JSON.parse(localStorage.getItem('pbe_leads') || '[]');
+        savedLeads.unshift(savedLead);
+        localStorage.setItem('pbe_leads', JSON.stringify(savedLeads));
+      } else {
+        throw new Error('Server returned error status');
+      }
+    } catch (err) {
+      console.error('Network error submitting lead, falling back to local simulation:', err);
+      const fallbackLead: Lead = {
+        id: 'PBE-' + Math.floor(100000 + Math.random() * 900000),
+        name,
+        phone,
+        email,
+        serviceNeeded: serviceLabel,
+        scopeSize: selectedScopeLabel,
+        details: details || 'No additional details provided',
+        status: 'pending',
+        submittedAt: new Date().toLocaleString(),
+        estimatedPrice: estimateValue,
+        preferredTime
+      };
+      setSubmittedLead(fallbackLead);
+      onLeadSubmitted(fallbackLead);
+
+      const savedLeads = JSON.parse(localStorage.getItem('pbe_leads') || '[]');
+      savedLeads.unshift(fallbackLead);
+      localStorage.setItem('pbe_leads', JSON.stringify(savedLeads));
+    }
     setStep(4);
   };
 
@@ -155,15 +184,15 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
         </div>
         <div className="flex items-center gap-2 mb-2">
           <div className="px-2 py-0.5 bg-[#FDE047] text-[#0C0C0C] font-mono text-[10px] uppercase font-bold tracking-widest rounded">
-            Upfront Rates
+            Custom Quote
           </div>
           <span className="text-neutral-400 text-xs font-semibold uppercase tracking-wider font-mono">Phoenix Metro Service Zone</span>
         </div>
         <h3 className="serif text-xl sm:text-2xl font-normal tracking-tight">
-          Instant Electrician Pricing &amp; Booking
+          Bespoke Custom Pricing &amp; Booking
         </h3>
-        <p className="text-[#888888] text-xs sm:text-sm mt-1 font-sans">
-          Complete {serviceType ? '2 more steps' : 'a quick estimate'} to lock in Tracy&apos;s upfront flat rates.
+        <p className="text-neutral-300 text-xs sm:text-sm mt-1 font-sans">
+          Complete {serviceType ? '2 more steps' : 'a quick request'} to receive a custom quote with Tracy&apos;s clear flat rates.
         </p>
 
         {/* Custom Step Indicator */}
@@ -226,8 +255,8 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
                     <div className="flex-1 pr-6">
                       <p className="font-semibold text-white text-sm">{opt.label}</p>
                       <p className="text-neutral-400 text-[11px] leading-tight mt-0.5">{opt.note}</p>
-                      <span className="block text-[11px] font-mono text-[#FDE047] mt-2 font-medium">
-                        Base: {opt.baseRange}
+                      <span className="block text-[11px] font-sans text-[#FDE047] mt-2 font-semibold">
+                        Pricing: {opt.baseRange}
                       </span>
                     </div>
                     {isSelected && (
@@ -308,10 +337,10 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
                           </div>
                         </div>
                         <div className="text-right">
-                          <span className="block font-mono text-sm font-semibold text-[#FDE047]">
+                          <span className="block font-sans text-xs font-bold text-[#FDE047]">
                             {scope.price}
                           </span>
-                          <span className="block text-[10px] text-neutral-400 mt-0.5">Estimated</span>
+                          <span className="block text-[10px] text-neutral-400 mt-0.5">Custom Scope</span>
                         </div>
                       </button>
                     );
@@ -346,20 +375,18 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
                         : 'bg-neutral-900 text-[#888888] cursor-not-allowed'
                     }`}
                   >
-                    Generate Estimate <ArrowRight className="w-4 h-4" />
+                    Continue to Request Pricing <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
               </>
             )}
           </div>
-        )}
-
-        {/* Step 3: Contact details & lock pricing */}
+        )}        {/* Step 3: Contact details & lock custom pricing */}
         {step === 3 && (
           <form onSubmit={handleSubmitBooking} className="space-y-4">
             <div className="flex items-center justify-between mb-2">
               <p className="label-caps">
-                Step 3: Secure quote &amp; Lock-in schedule
+                Step 3: Secure Quote &amp; Lock-in Schedule
               </p>
               <button 
                 type="button"
@@ -377,16 +404,16 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
               </div>
               <div className="flex-1">
                 <p className="text-xs text-[#FDE047] font-semibold uppercase tracking-wider font-mono">
-                  Guaranteed Est. Range Locked
+                  Custom Quote Requested
                 </p>
                 <div className="flex items-baseline gap-2 mt-1">
-                  <span className="font-mono text-xl sm:text-2xl font-black text-white">
-                    {calculateEstimate()}
+                  <span className="font-sans text-lg font-black text-white">
+                    Custom Quote Pending
                   </span>
-                  <span className="text-xs text-[#888888]">({getEstimatedDuration()} active labor)</span>
+                  <span className="text-xs text-neutral-400">({getEstimatedDuration()} project duration)</span>
                 </div>
                 <p className="text-neutral-400 text-[11px] mt-1 leading-normal">
-                  Our price includes basic diagnostic, parts, and a 1-year performance warranty. No surprise dispatch fees.
+                  We calculate custom flat rates for panel upgrades, solar panels, and smart solutions. Tracy will review your scope details and contact you.
                 </p>
               </div>
             </div>
@@ -464,7 +491,7 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
                 type="submit"
                 className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-[#FDE047] hover:bg-[#FDE047]/90 text-[#0C0C0C] shadow-lg active:scale-98 transition-all"
               >
-                Secure Guaranteed Rate <Check className="w-4 h-4 stroke-[2.5]" />
+                Submit Price Request <Check className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
           </form>
@@ -479,7 +506,7 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
               </div>
               <div className="flex-1 text-center sm:text-left">
                 <p className="font-mono text-[10px] uppercase font-bold text-emerald-400 tracking-wider">
-                  Quote Guaranteed &amp; Schedule Held
+                  Custom Quote Requested &amp; Schedule Held
                 </p>
                 <h4 className="serif text-lg font-bold text-white mt-1">
                   Awesome, {submittedLead.name.split(' ')[0]}! Your Ticket is Active.

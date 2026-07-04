@@ -78,18 +78,21 @@ export default function Header({ onOpenBooking }: HeaderProps) {
 
           {/* Nav Items (Desktop) */}
           <nav className="hidden md:flex items-center gap-8 text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-400">
-            <a href="#services" className="hover:text-white transition-all duration-300 hover:translate-y-[-1px]">
-              Specialties
-            </a>
-            <a href="#estimate-section" className="hover:text-white transition-all duration-300 hover:translate-y-[-1px]">
-              Process
-            </a>
-            <a href="#reviews" className="hover:text-white transition-all duration-300 hover:translate-y-[-1px]">
-              Reviews
-            </a>
-            <a href="#coverage" className="hover:text-white transition-all duration-300 hover:translate-y-[-1px]">
-              Service Area
-            </a>
+            {[
+              { label: "Specialties", href: "#services" },
+              { label: "Process", href: "#estimate-section" },
+              { label: "Reviews", href: "#reviews" },
+              { label: "Service Area", href: "#coverage" }
+            ].map((link, idx) => (
+              <a
+                key={idx}
+                href={link.href}
+                className="relative py-1 hover:text-white transition-colors duration-300 group"
+              >
+                {link.label}
+                <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#FDE047] group-hover:w-full transition-all duration-300 ease-out" />
+              </a>
+            ))}
           </nav>
 
           {/* Action Callouts */}
@@ -107,7 +110,7 @@ export default function Header({ onOpenBooking }: HeaderProps) {
               onClick={onOpenBooking}
               className="px-3.5 py-1.5 sm:px-5 sm:py-2 bg-gradient-to-r from-[#FDE047] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] text-[#0C0C0C] rounded-xl text-xs sm:text-sm font-bold tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(253,224,71,0.25)] hover:shadow-[0_0_25px_rgba(253,224,71,0.55)] active:scale-98 border border-yellow-200/40"
             >
-              BOOK SERVICE
+              REQUEST PRICING
             </button>
           </div>
         </div>

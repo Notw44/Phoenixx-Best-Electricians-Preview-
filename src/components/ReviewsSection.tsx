@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Star, ThumbsUp, CheckCircle, MessageSquare, Plus, PenTool, Check } from 'lucide-react';
+import { motion } from 'motion/react';
 import { Review } from '../types';
 
 interface ReviewsSectionProps {
@@ -67,7 +68,7 @@ export default function ReviewsSection({ reviews, onAddReview }: ReviewsSectionP
   };
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-16 sm:space-y-20">
       {/* Visual Analytics Hub */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center bg-[#111111]/75 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl">
         {/* Left: Score Card */}
@@ -249,67 +250,85 @@ export default function ReviewsSection({ reviews, onAddReview }: ReviewsSectionP
       )}
 
       {/* Reviews Render Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-12 pt-10 pb-16">
         {filteredReviews.length === 0 ? (
           <div className="col-span-full py-12 text-center text-neutral-400 text-sm border border-dashed border-white/10 rounded-2xl bg-[#111111]/75 backdrop-blur-md">
             No reviews match this specific category yet. Write one above!
           </div>
         ) : (
-          filteredReviews.map((review) => (
-            <div
-              key={review.id}
-              className="bg-[#111111]/70 backdrop-blur-md border border-white/10 hover:border-white/20 rounded-3xl p-6 sm:p-7 shadow-2xl transition-all duration-300 flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex justify-between items-start gap-4">
-                  <div className="flex items-center gap-3">
-                    {review.avatarUrl ? (
-                      <img
-                        src={review.avatarUrl}
-                        alt={review.author}
-                        referrerPolicy="no-referrer"
-                        className="w-10 h-10 rounded-full object-cover border border-white/10"
-                        onError={(e) => {
-                          // Fallback to initial
-                          (e.currentTarget as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${review.author}`;
-                        }}
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-neutral-900 flex items-center justify-center font-bold text-white text-sm uppercase">
-                        {review.author[0]}
+          filteredReviews.map((review, index) => {
+            // Expensive, organic floating offsets for asymmetric magazine-style layouts
+            const offsets = [
+              'md:-translate-y-5 shadow-[0_15px_30px_rgba(253,224,71,0.02)]',
+              'md:translate-y-3 bg-[#13120E]/85 border-yellow-500/15 shadow-[0_25px_45px_rgba(253,224,71,0.06)]',
+              'md:translate-y-8 shadow-[0_15px_30px_rgba(0,0,0,0.3)]',
+              'md:-translate-y-2 shadow-[0_18px_35px_rgba(253,224,71,0.03)]',
+              'md:translate-y-5 bg-[#111111]/90 shadow-[0_20px_40px_rgba(0,0,0,0.4)]',
+              'md:-translate-y-7 shadow-[0_15px_25px_rgba(253,224,71,0.015)]'
+            ];
+            const offsetClass = offsets[index % offsets.length];
+
+            return (
+              <motion.div
+                key={review.id}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.6, delay: Math.min(index * 0.08, 0.45), ease: "easeOut" }}
+                whileHover={{ y: -4, scale: 1.02, transition: { duration: 0.2 } }}
+                className={`bg-[#111111]/70 backdrop-blur-md border border-white/10 hover:border-[#FDE047]/30 rounded-3xl p-6 sm:p-7 transition-all duration-300 flex flex-col justify-between group ${offsetClass}`}
+              >
+                <div>
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex items-center gap-3">
+                      {review.avatarUrl ? (
+                        <img
+                          src={review.avatarUrl}
+                          alt={review.author}
+                          referrerPolicy="no-referrer"
+                          className="w-10 h-10 rounded-full object-cover border border-white/10"
+                          onError={(e) => {
+                            // Fallback to initial
+                            (e.currentTarget as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${review.author}`;
+                          }}
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-neutral-900 flex items-center justify-center font-bold text-white text-sm uppercase">
+                          {review.author[0]}
+                        </div>
+                      )}
+                      <div>
+                        <h5 className="font-semibold text-white text-sm leading-tight">{review.author}</h5>
+                        <span className="text-[10px] text-neutral-400 font-mono">{review.timeAgo}</span>
                       </div>
-                    )}
-                    <div>
-                      <h5 className="font-semibold text-white text-sm leading-tight">{review.author}</h5>
-                      <span className="text-[10px] text-neutral-400 font-mono">{review.timeAgo}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[...Array(review.rating)].map((_, i) => (
+                        <Star key={i} className="w-3.5 h-3.5 fill-[#FDE047] text-[#FDE047] group-hover:scale-110 transition-transform duration-300" style={{ transitionDelay: `${i * 50}ms` }} />
+                      ))}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    {[...Array(review.rating)].map((_, i) => (
-                      <Star key={i} className="w-3.5 h-3.5 fill-[#FDE047] text-[#FDE047]" />
-                    ))}
-                  </div>
+
+                  <p className="text-neutral-300 text-xs sm:text-sm mt-5 leading-relaxed font-normal">
+                    &ldquo;{review.text}&rdquo;
+                  </p>
                 </div>
 
-                <p className="text-neutral-300 text-xs sm:text-sm mt-5 leading-relaxed font-normal italic">
-                  &ldquo;{review.text}&rdquo;
-                </p>
-              </div>
-
-              <div className="mt-6 pt-5 border-t border-white/5 flex flex-wrap gap-1.5 items-center">
-                <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider mr-2 font-mono">Verified Call</span>
-                {review.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-2 py-0.5 bg-neutral-900 text-neutral-400 rounded font-mono text-[9px] uppercase tracking-wide font-medium"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))
+                <div className="mt-6 pt-5 border-t border-white/5 flex flex-wrap gap-1.5 items-center">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400 group-hover:rotate-6 transition-transform" />
+                  <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider mr-2 font-mono">Verified Call</span>
+                  {review.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-2 py-0.5 bg-neutral-900 text-neutral-400 rounded font-mono text-[9px] uppercase tracking-wide font-medium group-hover:text-white transition-colors"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </motion.div>
+            );
+          })
         )}
       </div>
     </div>

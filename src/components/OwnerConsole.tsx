@@ -18,79 +18,96 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
   }, []);
 
   const loadLeads = () => {
-    let savedLeads = JSON.parse(localStorage.getItem('pbe_leads') || '[]');
-    
-    // Seed with realistic demo leads if empty
-    if (savedLeads.length === 0) {
-      const demoLeads: Lead[] = [
-        {
-          id: 'PBE-924103',
-          name: 'Sophie Copeland',
-          phone: '(602) 780-1140',
-          email: 'sophie.copeland@example.com',
-          serviceNeeded: 'Electrical Panel Upgrade',
-          scopeSize: 'Standard 100A to 200A main service',
-          details: 'Needs old Zinsco panel replaced before house sale closing next month.',
-          status: 'completed',
-          submittedAt: 'Yesterday, 4:15 PM',
-          estimatedPrice: '$1,800 - $2,400',
-          preferredTime: 'Flexible'
-        },
-        {
-          id: 'PBE-481029',
-          name: 'Tracey Conner',
-          phone: '(602) 555-0192',
-          email: 'tconner@example.net',
-          serviceNeeded: 'Breaker Repair & Troubleshooting',
-          scopeSize: 'Single circuit breaker trips continuously',
-          details: 'Main bedroom breaker keeps clicking off. Unable to reset.',
-          status: 'completed',
-          submittedAt: '2 days ago',
-          estimatedPrice: '$150 - $280',
-          preferredTime: 'Same Day Emergency'
-        },
-        {
-          id: 'PBE-749104',
-          name: 'Marcus Vance',
-          phone: '(602) 555-2244',
-          email: 'marcus@vancecreative.com',
-          serviceNeeded: 'Smart Switches & Outlets',
-          scopeSize: 'Install smart dimmers / custom Lutron switches',
-          details: 'Wants 14 dimmers installed in high-ceiling kitchen and dining room.',
-          status: 'dispatched',
-          submittedAt: 'Today, 10:30 AM',
-          estimatedPrice: '$90 - $160',
-          preferredTime: 'Tomorrow Morning'
+    fetch('/api/leads')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setLeads(data);
         }
-      ];
-      localStorage.setItem('pbe_leads', JSON.stringify(demoLeads));
-      savedLeads = demoLeads;
-    }
-    setLeads(savedLeads);
+      })
+      .catch(err => {
+        console.error('Error fetching leads from backend, fallback to localStorage:', err);
+        const savedLeads = JSON.parse(localStorage.getItem('pbe_leads') || '[]');
+        setLeads(savedLeads);
+      });
   };
 
-  const handleStatusChange = (id: string, newStatus: 'pending' | 'dispatched' | 'completed') => {
-    const updated = leads.map(l => {
-      if (l.id === id) {
-        return { ...l, status: newStatus };
+  const handleStatusChange = async (id: string, newStatus: 'pending' | 'dispatched' | 'completed') => {
+    try {
+      const response = await fetch(`/api/leads/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (response.ok) {
+        const updatedLead = await response.json();
+        setLeads(prev => prev.map(l => l.id === id ? updatedLead : l));
+      } else {
+        throw new Error('API update failed');
       }
-      return l;
-    });
-    localStorage.setItem('pbe_leads', JSON.stringify(updated));
-    setLeads(updated);
+    } catch (err) {
+      console.error('Failed to update status on backend, applying local fallback:', err);
+      const updated = leads.map(l => {
+        if (l.id === id) {
+          return { ...l, status: newStatus };
+        }
+        return l;
+      });
+      localStorage.setItem('pbe_leads', JSON.stringify(updated));
+      setLeads(updated);
+    }
   };
 
-  const handleDeleteLead = (id: string) => {
+  const handleDeleteLead = async (id: string) => {
     if (!window.confirm('Are you sure you want to remove this lead/ticket record?')) return;
-    const updated = leads.filter(l => l.id !== id);
-    localStorage.setItem('pbe_leads', JSON.stringify(updated));
-    setLeads(updated);
+    try {
+      const response = await fetch(`/api/leads/${id}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        setLeads(prev => prev.filter(l => l.id !== id));
+      } else {
+        throw new Error('API delete failed');
+      }
+    } catch (err) {
+      console.error('Failed to delete lead from server, applying local fallback:', err);
+      const updated = leads.filter(l => l.id !== id);
+      localStorage.setItem('pbe_leads', JSON.stringify(updated));
+      setLeads(updated);
+    }
   };
 
-  const clearAllLeads = () => {
+  const clearAllLeads = async () => {
     if (!window.confirm('Delete all stored leads? This cannot be undone.')) return;
-    localStorage.setItem('pbe_leads', JSON.stringify([]));
-    setLeads([]);
+    try {
+      const response = await fetch('/api/leads/purge', {
+        method: 'POST'
+      });
+      if (response.ok) {
+        setLeads([]);
+      } else {
+        throw new Error('API purge failed');
+      }
+    } catch (err) {
+      console.error('Failed to purge server leads, applying local fallback:', err);
+      localStorage.setItem('pbe_leads', JSON.stringify([]));
+      setLeads([]);
+    }
+  };
+
+  const resetDemoLeads = async () => {
+    if (!window.confirm('Reset leads collection back to original demo values?')) return;
+    try {
+      const response = await fetch('/api/leads/reset', {
+        method: 'POST'
+      });
+      if (response.ok) {
+        const resetData = await response.json();
+        setLeads(resetData);
+      }
+    } catch (err) {
+      console.error('Failed to reset demo leads:', err);
+    }
   };
 
   // Calculations
@@ -216,8 +233,15 @@ export default function OwnerConsole({ onClose }: OwnerConsoleProps) {
               Sync Records
             </button>
             <button
+              onClick={resetDemoLeads}
+              className="px-3 py-1.5 bg-yellow-950/20 border border-yellow-500/20 hover:bg-yellow-900/20 text-[#FDE047] rounded-lg text-xs font-medium cursor-pointer"
+              title="Restore original demo leads dataset"
+            >
+              Reset Demo
+            </button>
+            <button
               onClick={clearAllLeads}
-              className="px-3 py-1.5 bg-red-955/40 hover:bg-red-900/40 text-red-400 border border-red-500/20 rounded-lg text-xs font-medium cursor-pointer"
+              className="px-3 py-1.5 bg-red-950/40 hover:bg-red-900/40 text-red-400 border border-red-500/20 rounded-lg text-xs font-medium cursor-pointer"
             >
               Purge Records
             </button>

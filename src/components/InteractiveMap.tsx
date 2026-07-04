@@ -78,7 +78,7 @@ export default function InteractiveMap() {
   const currentZoneObj = zones.find(z => z.name === selectedZone) || zones[0];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-stretch">
       {/* Search and Details Card */}
       <div className="lg:col-span-5 flex flex-col justify-between bg-[#111111]/80 backdrop-blur-md border border-white/10 p-6 sm:p-8 rounded-3xl shadow-2xl text-left">
         <div className="space-y-6">
