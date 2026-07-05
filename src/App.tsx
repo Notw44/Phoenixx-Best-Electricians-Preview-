@@ -232,7 +232,7 @@ console.log("QUOTE FUNCTION TRIGGERED", newQuote);
         }
       } catch (err) {
         console.error('Network error adding review:', err);
-      }
+      
     const handleAddReview = async (newReview: Review) => {
   let submittedToSupabase = false;
 
