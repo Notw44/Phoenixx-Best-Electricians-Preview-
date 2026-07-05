@@ -26,38 +26,36 @@ import { SERVICES, REVIEWS, FAQS } from './data';
 import { Lead, Review } from './types';
 
 // Deluxe, 60fps viewport-triggered count-up counter for stats
-function AnimatedCounter({
-  value,
-  duration = 1.5,
-  suffix = ""
-}: {
-  value: number;
-  duration?: number;
-  suffix?: string;
-}) {
+function AnimatedCounter({ value, duration = 1.5, suffix = "" }: { value: number; duration?: number; suffix?: string }) {
   const [count, setCount] = useState(0);
   const elementRef = useRef<HTMLSpanElement | null>(null);
   const [started, setStarted] = useState(false);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) setStarted(true);
-    });
-
-    if (elementRef.current) observer.observe(elementRef.current);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setStarted(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (elementRef.current) {
+      observer.observe(elementRef.current);
+    }
     return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
     if (!started) return;
-
     let start = 0;
     const end = value;
+    if (start === end) return;
 
     const totalMs = duration * 1000;
-    const stepTime = 16;
-    const steps = totalMs / stepTime;
-    const increment = (end - start) / steps;
+    const intervalTime = 16; // approx 60fps
+    const totalSteps = totalMs / intervalTime;
+    const increment = (end - start) / totalSteps;
 
     const timer = setInterval(() => {
       start += increment;
@@ -67,7 +65,7 @@ function AnimatedCounter({
       } else {
         setCount(Math.floor(start));
       }
-    }, stepTime);
+    }, intervalTime);
 
     return () => clearInterval(timer);
   }, [value, duration, started]);
@@ -166,36 +164,28 @@ export default function App() {
           } else if (error) {
             console.warn("Supabase reviews query returned error:", error.message);
           }
-             } catch (err) {
-        console.error("Direct Supabase review exception:", err);
+        } catch (err) {
+          console.error("Failed to query reviews directly from Supabase:", err);
+        }
       }
-    }
 
-    if (!submittedToSupabase) {
+      // Fallback 1: Express Server API (which we will also filter)
       try {
-        const response = await fetch('/api/reviews', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            author: newReview.author,
-            rating: newReview.rating,
-            text: newReview.text,
-            category: newReview.category,
-            tags: newReview.tags
-          })
-        });
-console.log("QUOTE FUNCTION TRIGGERED", newQuote);
-        if (response.ok) {
-          console.log("Review submitted successfully via backend API (pending approval).");
+        const res = await fetch('/api/reviews');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setReviews(data);
+            return;
+          }
         }
       } catch (err) {
-        console.error('Network error adding review:', err);
+        console.warn('Failed to load reviews from API, keeping default static reviews:', err);
       }
-    }
-  };
+    };
 
-   
- 
+    fetchApprovedReviews();
+  }, []);
 
   // Scroll to estimate engine helper
   const scrollToBooking = (serviceId?: string) => {
@@ -213,7 +203,31 @@ console.log("QUOTE FUNCTION TRIGGERED", newQuote);
     console.log('New lead registered:', newLead);
   };
 
-  
+  const handleAddReview = async (newReview: Review) => {
+    let submittedToSupabase = false;
+
+    if (supabase) {
+      try {
+        const { error } = await supabase
+          .from('reviews')
+          .insert([{
+            customer_name: newReview.author,
+            rating: newReview.rating,
+            review: newReview.text,
+            approved: false // Default to false so it requires admin approval
+          }]);
+
+        if (!error) {
+          submittedToSupabase = true;
+          console.log("Review submitted successfully directly to Supabase (pending approval).");
+        } else {
+          console.warn("Direct Supabase review insert failed:", error.message);
+        }
+      } catch (err) {
+        console.error("Direct Supabase review exception:", err);
+      }
+    }
+
     if (!submittedToSupabase) {
       try {
         const response = await fetch('/api/reviews', {
@@ -232,30 +246,9 @@ console.log("QUOTE FUNCTION TRIGGERED", newQuote);
         }
       } catch (err) {
         console.error('Network error adding review:', err);
-      
-    const handleAddReview = async (newReview: Review) => {
-  let submittedToSupabase = false;
-
-  if (supabase) {
-    try {
-      const { error } = await supabase
-        .from('reviews')
-        .insert([{
-          customer_name: newReview.author,
-          rating: newReview.rating,
-          review: newReview.text,
-          approved: false
-        }]);
-
-      if (!error) {
-        submittedToSupabase = true;
-        console.log("Review submitted to Supabase");
       }
-    } catch (err) {
-      console.error(err);
     }
-  }
-};
+    
     // NOTE: We DO NOT append the review to the local reviews state immediately!
     // Since it is approved = false, it must NOT appear on the home page until Tracy approves it in OwnerConsole.
   };
@@ -322,7 +315,7 @@ console.log("QUOTE FUNCTION TRIGGERED", newQuote);
               className="group w-full xs:w-auto px-8 py-4 bg-gradient-to-r from-[#FDE047] via-[#FFF59D] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(253,224,71,0.25)] text-[#0C0C0C] rounded-2xl text-sm font-bold tracking-wide transition-all duration-300 shadow-[0_0_20px_rgba(253,224,71,0.25)] active:scale-98 flex items-center justify-center gap-2.5 border border-yellow-200/50"
             >
               <Sparkles className="w-4 h-4 text-[#0C0C0C] animate-pulse group-hover:rotate-12 transition-transform duration-300" />
-              <span>CALCULATE INSTANT PRICE</span>
+              <span>REQUEST A FREE QUOTE</span>
               <ArrowRight className="w-4 h-4 text-[#0C0C0C] group-hover:translate-x-1.5 transition-transform duration-300" />
             </button>
             <a
@@ -480,73 +473,26 @@ console.log("QUOTE FUNCTION TRIGGERED", newQuote);
       </section>
 
       {/* Key Lead Generator Block with spacious, luxurious vertical padding */}
-      <section id="estimate-section" className="py-44 sm:py-64 lg:py-72 bg-[#111111] text-white relative border-b border-white/10">
+      <section id="estimate-section" className="py-24 sm:py-32 bg-[#111111] text-white relative border-b border-white/10">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30 pointer-events-none" />
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24 items-center">
-            
-            {/* Left Content / Pricing pitch */}
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.7 }}
-              className="lg:col-span-5 space-y-6 sm:space-y-8 text-left"
-            >
-              <div>
-                <span className="label-caps text-[#FDE047]">
-                  Fair Price Guarantee
-                </span>
-                <h2 className="serif text-3xl sm:text-4xl lg:text-5xl font-normal text-white mt-4 leading-tight">
-                  Transparent upfront rates before we start.
-                </h2>
-                <p className="text-neutral-300 text-sm sm:text-base mt-4 leading-relaxed font-normal">
-                  No surprise diagnostics, no inflated emergency markups. We utilize regional Phoenix fair-rate databases to calculate clear, guaranteed quotes. Lock in your slot with Tracy in 60 seconds.
-                </p>
-              </div>
-
-              {/* Guarantees checklist */}
-              <div className="space-y-4">
-                {[
-                  '100% Upfront Quotes (No visual-estimate gimmicks)',
-                  'Direct communication with Tracy (No call centers)',
-                  '5-Point Safety System Diagnostic included with every booking',
-                  'Clean workspace pledge (We leave your home cleaner than we found it)'
-                ].map((item, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-[#FDE047]/10 border border-[#FDE047]/35 flex items-center justify-center text-[#FDE047] mt-0.5 shrink-0 shadow-[0_0_10px_rgba(253,224,71,0.1)]">
-                      <Check className="w-3.5 h-3.5 stroke-[3] drop-shadow-[0_0_3px_rgba(253,224,71,0.6)]" />
-                    </div>
-                    <span className="text-neutral-300 text-xs sm:text-sm">{item}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Instant Call Out */}
-              <div className="bg-[#111111]/80 backdrop-blur-md border border-white/15 hover:border-[#FDE047]/30 hover:scale-[1.02] hover:-translate-y-1 p-5 rounded-3xl flex items-center gap-4 shadow-xl transition-all duration-300">
-                <div className="w-12 h-12 rounded-2xl bg-[#FDE047]/10 border border-[#FDE047]/30 flex items-center justify-center text-[#FDE047] shrink-0 shadow-[0_0_12px_rgba(253,224,71,0.1)]">
-                  <Phone className="w-5 h-5 text-[#FDE047] drop-shadow-[0_0_4px_rgba(253,224,71,0.5)]" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest font-semibold">Emergency Line</p>
-                  <p className="text-white font-semibold text-sm sm:text-base leading-tight mt-0.5">Need immediate dispatch?</p>
-                  <a href="tel:6027801140" className="text-[#FDE047] text-xs sm:text-sm font-bold hover:text-white hover:underline block mt-0.5 transition-colors duration-300 drop-shadow-[0_0_6px_rgba(253,224,71,0.3)]">
-                    Call Dispatcher now: (602) 780-1140
-                  </a>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Right: The Interactive Booking wizard component */}
-            <div className="lg:col-span-7">
-              <BookingWizard 
-                onLeadSubmitted={handleLeadSubmitted}
-                initialServiceId={selectedServiceId}
-              />
-            </div>
-
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 relative z-10">
+          <div className="text-center mb-10">
+            <span className="text-xs font-mono font-bold tracking-[0.2em] text-[#FDE047] bg-[#FDE047]/10 border border-[#FDE047]/20 px-3 py-1 rounded-full uppercase">
+              Free Service Quote
+            </span>
+            <h2 className="serif text-3xl sm:text-4xl font-normal text-white mt-5">
+              Request a Free Quote
+            </h2>
+            <p className="text-neutral-400 text-xs sm:text-sm mt-3 max-w-lg mx-auto">
+              Tell us about your electrical requirements. Tracy and our team will get back to you with clean upfront rates.
+            </p>
           </div>
+
+          <BookingWizard 
+            onLeadSubmitted={handleLeadSubmitted}
+            initialServiceId={selectedServiceId}
+          />
         </div>
       </section>
 

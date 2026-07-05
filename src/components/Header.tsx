@@ -80,7 +80,7 @@ export default function Header({ onOpenBooking }: HeaderProps) {
           <nav className="hidden md:flex items-center gap-8 text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-400">
             {[
               { label: "Specialties", href: "#services" },
-              { label: "Process", href: "#estimate-section" },
+              { label: "Free Quote", href: "#estimate-section" },
               { label: "Reviews", href: "#reviews" },
               { label: "Service Area", href: "#coverage" },
               { label: "Contact", href: "#contact" }
@@ -111,7 +111,7 @@ export default function Header({ onOpenBooking }: HeaderProps) {
               onClick={onOpenBooking}
               className="px-3.5 py-1.5 sm:px-5 sm:py-2 bg-gradient-to-r from-[#FDE047] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] text-[#0C0C0C] rounded-xl text-xs sm:text-sm font-bold tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(253,224,71,0.25)] hover:shadow-[0_0_25px_rgba(253,224,71,0.55)] active:scale-98 border border-yellow-200/40"
             >
-              REQUEST PRICING
+              REQUEST FREE QUOTE
             </button>
           </div>
         </div>
