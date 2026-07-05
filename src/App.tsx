@@ -74,7 +74,7 @@ function AnimatedCounter({
 
   return <span ref={elementRef}>{count}{suffix}</span>;
 }
-
+}
 export default function App() {
   const [reviews, setReviews] = useState<Review[]>(REVIEWS);
   const [selectedServiceId, setSelectedServiceId] = useState<string>('');
