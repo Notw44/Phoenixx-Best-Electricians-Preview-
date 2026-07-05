@@ -194,7 +194,7 @@ console.log("QUOTE FUNCTION TRIGGERED", newQuote);
     }
   };
 
-    fetchApprovedReviews()
+   
  
 
   // Scroll to estimate engine helper
