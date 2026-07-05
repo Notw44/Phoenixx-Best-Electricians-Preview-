@@ -26,39 +26,38 @@ import { SERVICES, REVIEWS, FAQS } from './data';
 import { Lead, Review } from './types';
 
 // Deluxe, 60fps viewport-triggered count-up counter for stats
-function AnimatedCounter{ value, duration = 1.5, suffix = "" }: { value: number; duration?: number; suffix?: string }
+function AnimatedCounter({
+  value,
+  duration = 1.5,
+  suffix = ""
+}: {
+  value: number;
+  duration?: number;
+  suffix?: string;
+}) {
   const [count, setCount] = useState(0);
   const elementRef = useRef<HTMLSpanElement | null>(null);
   const [started, setStarted] = useState(false);
 
-};
-
-
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setStarted(true);
-        }
-      },
-      { threshold: 0.1 }
-    );
-    if (elementRef.current) {
-      observer.observe(elementRef.current);
-    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) setStarted(true);
+    });
+
+    if (elementRef.current) observer.observe(elementRef.current);
     return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
     if (!started) return;
+
     let start = 0;
     const end = value;
-    if (start === end) return;
 
     const totalMs = duration * 1000;
-    const intervalTime = 16; // approx 60fps
-    const totalSteps = totalMs / intervalTime;
-    const increment = (end - start) / totalSteps;
+    const stepTime = 16;
+    const steps = totalMs / stepTime;
+    const increment = (end - start) / steps;
 
     const timer = setInterval(() => {
       start += increment;
@@ -68,7 +67,7 @@ function AnimatedCounter{ value, duration = 1.5, suffix = "" }: { value: number;
       } else {
         setCount(Math.floor(start));
       }
-    }, intervalTime);
+    }, stepTime);
 
     return () => clearInterval(timer);
   }, [value, duration, started]);
@@ -234,54 +233,29 @@ console.log("QUOTE FUNCTION TRIGGERED", newQuote);
       } catch (err) {
         console.error('Network error adding review:', err);
       }
-    }
     const handleAddReview = async (newReview: Review) => {
-    let submittedToSupabase = false;
+  let submittedToSupabase = false;
 
-    if (supabase) {
-      try {
-        const { error } = await supabase
-          .from('reviews')
-          .insert([{
-            customer_name: newReview.author,
-            rating: newReview.rating,
-            review: newReview.text,
-            approved: false // Default to false so it requires admin approval
-          }]);
-
-        if (!error) {
-          submittedToSupabase = true;
-          console.log("Review submitted successfully directly to Supabase (pending approval).");
-        } else {
-          console.warn("Direct Supabase review insert failed:", error.message);
-        }
-      } catch (err) {
-        console.error("Direct Supabase review exception:", err);
-      }const handleAddQuote = async (newQuote) => {
   if (supabase) {
     try {
       const { error } = await supabase
-        .from('quotes') // or custom_quote if that's your table name
+        .from('reviews')
         .insert([{
-          name: newQuote.name,
-          email: newQuote.email,
-          service: newQuote.service,
-          message: newQuote.message,
-          status: "new"
+          customer_name: newReview.author,
+          rating: newReview.rating,
+          review: newReview.text,
+          approved: false
         }]);
 
-      if (error) {
-        console.warn("Quote insert failed:", error.message);
-      } else {
-        console.log("Quote submitted successfully.");
+      if (!error) {
+        submittedToSupabase = true;
+        console.log("Review submitted to Supabase");
       }
     } catch (err) {
       console.error(err);
     }
   }
 };
-    }
-
     // NOTE: We DO NOT append the review to the local reviews state immediately!
     // Since it is approved = false, it must NOT appear on the home page until Tracy approves it in OwnerConsole.
   };
