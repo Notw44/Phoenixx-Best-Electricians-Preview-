@@ -194,8 +194,8 @@ console.log("QUOTE FUNCTION TRIGGERED", newQuote);
     }
   };
 
-    fetchApprovedReviews();
-  }, []);
+    fetchApprovedReviews()
+ 
 
   // Scroll to estimate engine helper
   const scrollToBooking = (serviceId?: string) => {
