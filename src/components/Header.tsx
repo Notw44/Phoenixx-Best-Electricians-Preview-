@@ -80,6 +80,7 @@ export default function Header({ onOpenBooking }: HeaderProps) {
           <nav className="hidden md:flex items-center gap-8 text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-400">
             {[
               { label: "Specialties", href: "#services" },
+              { label: "Smart Lighting", href: "#ambient-studio" },
               { label: "Free Quote", href: "#estimate-section" },
               { label: "Reviews", href: "#reviews" },
               { label: "Service Area", href: "#coverage" },

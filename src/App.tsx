@@ -15,12 +15,26 @@ import OwnerConsole from './components/OwnerConsole';
 import ContactForm from './components/ContactForm';
 import ShaderBackground from '@/components/ui/asd';
 import ScrollExpandMedia from '@/components/ui/scroll-expansion-hero';
-import { LayoutGrid } from '@/components/ui/layout-grid';
+import { PortfolioStack } from '@/components/ui/portfolio-stack';
+import { VolumetricStudio } from '@/components/ui/volumetric-studio';
 
 import luxurySmartHomePanel from './assets/images/luxury_smart_home_panel_1783000379209.jpg';
 import designerLighting from './assets/images/designer_lighting_1783000392525.jpg';
 import electricianWorking from './assets/images/electrician_working_1783049484014.jpg';
 import smartHomeWiring from './assets/images/smart_home_wiring_1783049500442.jpg';
+import goldenElectricityBg from './assets/images/golden_electricity_bg_1783256632116.jpg';
+
+// Newly generated high-end black and gold electrician images
+import luxuryCircuitPanel from './assets/images/luxury_circuit_panel_1783294895636.jpg';
+import smartHomeAutomationRack from './assets/images/smart_home_automation_rack_1783294908397.jpg';
+import designerLightingControls from './assets/images/designer_lighting_controls_1783294921523.jpg';
+import electricianGoldGlow from './assets/images/electrician_gold_glow_1783294935435.jpg';
+
+// Premium brand-new luxury portfolio showcase images
+import luxuryHomeTheater from './assets/images/luxury_home_theater_1783295923695.jpg';
+import smartLightingKitchen from './assets/images/smart_lighting_kitchen_1783295935423.jpg';
+import evChargerGarage from './assets/images/ev_charger_garage_1783295946540.jpg';
+import automationServerProgramming from './assets/images/automation_server_programming_1783295958248.jpg';
 
 import { SERVICES, REVIEWS, FAQS } from './data';
 import { Lead, Review } from './types';
@@ -79,63 +93,55 @@ export default function App() {
   const [isOwnerConsoleOpen, setIsOwnerConsoleOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
-  const portfolioCards = [
+  const portfolioProjects = [
     {
-      id: 1,
-      content: (
-        <div className="space-y-2">
-          <p className="font-bold md:text-3xl text-xl text-white">Precision Panel Upgrades</p>
-          <p className="font-normal text-[11px] text-[#FDE047] font-mono tracking-wider uppercase">Featured Install</p>
-          <p className="font-normal text-sm text-neutral-300 leading-relaxed mt-4">
-            Masterfully engineered electrical panel replacements. Every breaker, wire, and label is structured at immaculate 90&deg; angles with tension-balanced industrial conduits.
-          </p>
-        </div>
-      ),
-      className: "md:col-span-2",
-      thumbnail: electricianWorking,
+      id: "p1",
+      title: "Cinematic Acoustics & Ambient Light",
+      subtitle: "01 / HIGH-END HOME CINEMA",
+      category: "Home Theater Integration",
+      description: "Custom fiber-optic starfield ceiling paired with premium automated Lutron scene dimming. We wired and calibrated the complete Dolby Atmos 11.2 spatial sound-array and luxury acoustics.",
+      image: luxuryHomeTheater,
+      specs: [
+        { label: "Cabling", value: "Solid-Core Audio-Grade Silver" },
+        { label: "Dimmers", value: "Lutron Palladiom Backlit" }
+      ]
     },
     {
-      id: 2,
-      content: (
-        <div className="space-y-2">
-          <p className="font-bold md:text-3xl text-xl text-white">Automated Smart Wiring</p>
-          <p className="font-normal text-[11px] text-[#FDE047] font-mono tracking-wider uppercase">Paradise Valley Residence</p>
-          <p className="font-normal text-sm text-neutral-300 leading-relaxed mt-4">
-            Pristine structured low-voltage and automation backbones. Flawless signal integrity and clean routing for modern home automation networks.
-          </p>
-        </div>
-      ),
-      className: "col-span-1",
-      thumbnail: smartHomeWiring,
+      id: "p2",
+      title: "Architectural Culinary Illuminations",
+      subtitle: "02 / LUMINESCENT ARCHITECTURE",
+      category: "Designer Lighting",
+      description: "Precision-routed low-voltage brass LED tape lighting seamlessly integrated under luxury onyx countertops and custom cabinetry. Hand-crafted control nodes with seamless 3-way scene switching.",
+      image: smartLightingKitchen,
+      specs: [
+        { label: "LED Voltage", value: "24V DC Ripple-Free Class 2" },
+        { label: "Controls", value: "Crestron Horizon Keypads" }
+      ]
     },
     {
-      id: 3,
-      content: (
-        <div className="space-y-2">
-          <p className="font-bold md:text-3xl text-xl text-white">Architectural Ambient Glow</p>
-          <p className="font-normal text-[11px] text-[#FDE047] font-mono tracking-wider uppercase">Designer Lighting</p>
-          <p className="font-normal text-sm text-neutral-300 leading-relaxed mt-4">
-            Custom high-end Lutron lighting control centers and bespoke linear light channels for the ultimate high-contrast luxury atmosphere.
-          </p>
-        </div>
-      ),
-      className: "col-span-1",
-      thumbnail: designerLighting,
+      id: "p3",
+      title: "High-Performance Dual EV Infrastructure",
+      subtitle: "03 / ZERO EMISSION ECOSYSTEM",
+      category: "Infrastructure & Power",
+      description: "Dedicated 100A sub-panel supply routing behind custom wall paneling to charge dual premium electric vehicles. Features custom gold-and-amber status LEDs and surge-suppression integration.",
+      image: evChargerGarage,
+      specs: [
+        { label: "Power Supply", value: "240V / 80A Dedicated Line" },
+        { label: "Protection", value: "Type 1 SPD Whole-House Guard" }
+      ]
     },
     {
-      id: 4,
-      content: (
-        <div className="space-y-2">
-          <p className="font-bold md:text-3xl text-xl text-white">Integrated Automation Hubs</p>
-          <p className="font-normal text-[11px] text-[#FDE047] font-mono tracking-wider uppercase">Custom Cabinetry</p>
-          <p className="font-normal text-sm text-neutral-300 leading-relaxed mt-4">
-            The command center of luxury living. Fully customized, flush-mounted master distribution centers blending invisible power with glowing tech accents.
-          </p>
-        </div>
-      ),
-      className: "md:col-span-2",
-      thumbnail: luxurySmartHomePanel,
-    },
+      id: "p4",
+      title: "Central Automation Backbone Configuration",
+      subtitle: "04 / DEEP SYSTEM INTEGRATION",
+      category: "Smart Home Control",
+      description: "Pristine server rack configuration routing more than 150 low-voltage control lines. Integrated Lutron HomeWorks hub, secure network layers, and uninterruptible power backups.",
+      image: automationServerProgramming,
+      specs: [
+        { label: "Connections", value: "CAT6A STP Shielded 10Gbps" },
+        { label: "Rack Power", value: "2.4kW Double-Conversion UPS" }
+      ]
+    }
   ];
 
   useEffect(() => {
@@ -156,7 +162,7 @@ export default function App() {
               timeAgo: row.created_at ? new Date(row.created_at).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' }) : 'Just now',
               text: row.review,
               avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(row.customer_name)}`,
-              category: 'general',
+              category: 'general' as const,
               tags: ['Verified Customer']
             }));
             setReviews(mapped);
@@ -254,7 +260,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0C0C0C] text-white font-sans leading-relaxed relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#0C0C0C] text-white font-sans leading-relaxed relative overflow-x-clip">
       
       {/* Premium WebGL Cybernetic Radar Background - Subtly toned down by 75-80% as requested */}
       <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.07]">
@@ -425,7 +431,7 @@ export default function App() {
       </section>
 
       {/* Deluxe Portfolio Spotlight with spacious, luxurious vertical padding */}
-      <section className="relative overflow-hidden py-44 sm:py-64 lg:py-72 bg-gradient-to-tr from-[#12100C] via-[#1D1A13] to-[#0D0B0A] border-y border-yellow-500/10">
+      <section className="relative overflow-clip pt-24 sm:pt-32 pb-0 bg-gradient-to-tr from-[#12100C] via-[#1D1A13] to-[#0D0B0A] border-y border-yellow-500/10">
         {/* Subtle diagonal grid accents */}
         <div className="absolute inset-0 bg-[radial-gradient(rgba(253,224,71,0.02)_1px,transparent_1px)] [background-size:32px_32px] opacity-60 pointer-events-none" />
         
@@ -433,9 +439,9 @@ export default function App() {
         <div className="absolute top-0 left-0 w-full h-[6px] bg-gradient-to-r from-transparent via-[#FDE047]/20 to-transparent transform -skew-y-1" />
         <div className="absolute bottom-0 left-0 w-full h-[6px] bg-gradient-to-r from-transparent via-[#FDE047]/20 to-transparent transform skew-y-1" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 mb-16">
           {/* Section Header with description and specs row */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start mb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
             <div className="lg:col-span-8 text-left space-y-6">
               <span className="label-caps tracking-[0.2em] text-[#FDE047]">
                 The Standard of Perfection
@@ -448,7 +454,7 @@ export default function App() {
                   We don&apos;t just run wiring; we design the physical pulse of your home. From clean-room industrial conduits to pristine, hand-routed designer Lutron panels, every wire is structured at perfect right angles with industrial-grade tension balancing.
                 </p>
                 <p className="text-neutral-400 text-sm sm:text-base leading-relaxed">
-                  When you work with Tracy&apos;s team, you are securing premium aesthetics that add real residential valuation to Phoenix&apos;s finest architectural assets. Click on any project card below to expand details.
+                  Scroll down to experience our modern installations in dynamic detail, showing luxury smart lighting, automated backbones, and custom circuitry setups.
                 </p>
               </div>
             </div>
@@ -464,17 +470,174 @@ export default function App() {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Interactive LayoutGrid Container */}
-          <div className="h-[650px] sm:h-[800px] lg:h-[900px] w-full relative">
-            <LayoutGrid cards={portfolioCards} />
+        {/* Polished Stacking Portfolio Showcase */}
+        <div className="w-full relative mt-12 px-4 sm:px-6">
+          <PortfolioStack projects={portfolioProjects} />
+        </div>
+      </section>
+
+      {/* Interactive Volumetric Lighting Studio Showcase */}
+      <section id="ambient-studio" className="py-44 sm:py-64 lg:py-72 bg-black border-b border-white/10 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(rgba(253,224,71,0.01)_1px,transparent_1px)] [background-size:32px_32px] opacity-40 pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+          <div className="text-center max-w-2xl mx-auto mb-20">
+            <span className="label-caps tracking-[0.2em] text-[#FDE047]">
+              Interactive Simulation
+            </span>
+            <h2 className="serif text-3xl sm:text-4xl font-normal text-white mt-4">
+              Physically-Accurate Volumetric Lighting
+            </h2>
+            <p className="text-neutral-400 text-sm sm:text-base mt-4">
+              Interact with Tracy's masterfully wired lighting setups. This real-time 3D simulation renders physical light cones, reflections, and premium dimming scenes.
+            </p>
+          </div>
+
+          <div className="w-full h-[600px] sm:h-[800px] relative bg-black overflow-hidden font-sans rounded-3xl border border-white/10 shadow-2xl">
+            <VolumetricStudio>
+              {/* DUAL DIMENSION HERO UI */}
+              <div className="flex flex-col items-center justify-center w-full h-full text-center px-4 relative z-10 pointer-events-none">
+                
+                {/* Title */}
+                <motion.h1
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 1.0, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="text-4xl md:text-6xl lg:text-7xl leading-none mb-6 font-bold tracking-tight text-transparent bg-clip-text bg-linear-to-b from-white to-white/40 drop-shadow-2xl"
+                >
+                  Illumine in a<br />new dimension.
+                </motion.h1>
+
+                {/* Subtitle */}
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 1.2, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="text-base md:text-lg max-w-2xl mb-10 text-white/50 font-medium"
+                >
+                  Phoenix Best Electricians brings high-fidelity Lutron and Crestron automated lighting arrays directly to your living space.
+                </motion.p>
+
+                {/* CTAs */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 1.4, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="flex flex-col sm:flex-row gap-4 pointer-events-auto"
+                >
+                  <button 
+                    onClick={() => scrollToBooking('ceiling_fan_lighting')}
+                    className="px-8 py-4 font-bold transition-transform hover:scale-105 active:scale-95 bg-white text-black rounded-full shadow-[0_0_20px_rgba(255,255,255,0.2)] cursor-pointer"
+                  >
+                    Design Your System
+                  </button>
+                  <button 
+                    onClick={() => {
+                      const el = document.getElementById('estimate-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="px-8 py-4 font-bold transition-transform hover:scale-105 active:scale-95 bg-transparent text-white border border-white/20 rounded-full hover:bg-white/10 cursor-pointer"
+                  >
+                    Request Free Quote
+                  </button>
+                </motion.div>
+              </div>
+            </VolumetricStudio>
           </div>
         </div>
       </section>
 
       {/* Key Lead Generator Block with spacious, luxurious vertical padding */}
-      <section id="estimate-section" className="py-24 sm:py-32 bg-[#111111] text-white relative border-b border-white/10">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30 pointer-events-none" />
+      <section 
+        id="estimate-section" 
+        className="pt-4 pb-24 sm:pb-32 bg-[#111111] text-white relative border-b border-white/10 overflow-hidden"
+      >
+        {/* Animated Golden Electricity Background Container */}
+        <div className="absolute inset-0 z-0 select-none overflow-hidden pointer-events-none">
+          <motion.div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${goldenElectricityBg})` }}
+            animate={{
+              scale: [1.02, 1.15, 1.05, 1.12, 1.02],
+              x: [0, -15, 15, -8, 0],
+              y: [0, 8, -12, 10, 0],
+            }}
+            transition={{
+              duration: 35,
+              ease: "easeInOut",
+              repeat: Infinity,
+            }}
+          />
+          
+          {/* Subtle lightning flicker effect overlay simulating electrical power surges */}
+          <motion.div 
+            className="absolute inset-0 bg-[#FDE047]/5 mix-blend-color-dodge"
+            animate={{
+              opacity: [0, 0.12, 0, 0.05, 0.22, 0.02, 0, 0.1, 0]
+            }}
+            transition={{
+              duration: 12,
+              ease: "easeInOut",
+              repeat: Infinity,
+            }}
+          />
+          
+          {/* Moving electrical golden currents & surges */}
+          <div className="absolute inset-0 overflow-hidden opacity-80">
+            {/* Surge 1: Horizontal electric pulse */}
+            <motion.div 
+              className="absolute left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#FDE047]/70 to-transparent blur-[1px]"
+              style={{ top: '35%' }}
+              animate={{
+                x: ['-100%', '100%'],
+                opacity: [0, 1, 1, 0],
+              }}
+              transition={{
+                duration: 7,
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatDelay: 3
+              }}
+            />
+            {/* Surge 2: Reverse horizontal electric pulse */}
+            <motion.div 
+              className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#EAB308]/60 to-transparent blur-[2px]"
+              style={{ top: '70%' }}
+              animate={{
+                x: ['100%', '-100%'],
+                opacity: [0, 0.8, 0.8, 0],
+              }}
+              transition={{
+                duration: 9,
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatDelay: 5
+              }}
+            />
+            {/* Surge 3: Vertical charge flow */}
+            <motion.div 
+              className="absolute top-0 bottom-0 w-[1.5px] bg-gradient-to-b from-transparent via-[#FDE047]/50 to-transparent blur-[1.5px]"
+              style={{ left: '30%' }}
+              animate={{
+                y: ['-100%', '100%'],
+                opacity: [0, 0.7, 0.7, 0],
+              }}
+              transition={{
+                duration: 11,
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatDelay: 2
+              }}
+            />
+          </div>
+
+          {/* Deep atmospheric overlay for high-contrast legibility */}
+          <div className="absolute inset-0 bg-neutral-950/75 backdrop-blur-[1px]" />
+        </div>
         
         <div className="max-w-3xl mx-auto px-4 sm:px-6 relative z-10">
           <div className="text-center mb-10">

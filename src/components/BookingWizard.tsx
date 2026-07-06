@@ -128,124 +128,128 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
 
   if (submitSuccess) {
     return (
-      <div className="bg-[#111111]/90 rounded-3xl border border-white/10 p-8 sm:p-12 text-center shadow-2xl max-w-xl mx-auto">
-        <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
-          <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path>
-          </svg>
+      <div className="relative rounded-3xl border border-white/10 p-8 sm:p-12 text-center shadow-2xl max-w-xl mx-auto overflow-hidden bg-black/45 backdrop-blur-md">
+        <div className="relative z-10">
+          <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          <h3 className="serif text-2xl font-normal text-white mb-3">
+            Request Received
+          </h3>
+          <p className="text-neutral-300 text-sm sm:text-base leading-relaxed">
+            Thank you! We&apos;ll contact you soon.
+          </p>
+          <button
+            onClick={() => setSubmitSuccess(false)}
+            className="mt-8 px-6 py-2.5 bg-black/55 hover:bg-black/75 text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-white rounded-xl transition-all border border-white/10 backdrop-blur-sm"
+          >
+            Submit Another Request
+          </button>
         </div>
-        <h3 className="serif text-2xl font-normal text-white mb-3">
-          Request Received
-        </h3>
-        <p className="text-neutral-300 text-sm sm:text-base leading-relaxed">
-          Thank you! We&apos;ll contact you soon.
-        </p>
-        <button
-          onClick={() => setSubmitSuccess(false)}
-          className="mt-8 px-6 py-2.5 bg-neutral-900 hover:bg-neutral-850 text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-white rounded-xl transition-all border border-white/10"
-        >
-          Submit Another Request
-        </button>
       </div>
     );
   }
 
   return (
-    <div className="bg-[#111111]/90 rounded-3xl border border-white/10 shadow-2xl p-6 sm:p-10 max-w-xl mx-auto backdrop-blur-md">
-      {errorMessage && (
-        <div className="mb-6 p-4 rounded-xl bg-red-950/20 border border-red-500/20 text-red-400 text-xs font-mono">
-          ⚠️ {errorMessage}
-        </div>
-      )}
+    <div className="relative rounded-3xl border border-white/10 shadow-2xl p-6 sm:p-10 max-w-xl mx-auto overflow-hidden bg-black/45 backdrop-blur-md">
+      <div className="relative z-10">
+        {errorMessage && (
+          <div className="mb-6 p-4 rounded-xl bg-red-950/20 border border-red-500/20 text-red-400 text-xs font-mono">
+            ⚠️ {errorMessage}
+          </div>
+        )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label className="block text-[11px] font-semibold text-[#888888] uppercase tracking-wider mb-2">
-            Your Name
-          </label>
-          <input
-            type="text"
-            required
-            disabled={isSubmitting}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Sophie Copeland"
-            className="w-full p-3.5 rounded-xl border border-white/10 bg-[#0C0C0C] text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-[11px] font-semibold text-[#888888] uppercase tracking-wider mb-2">
-              Phone Number
+              Your Name
             </label>
             <input
-              type="tel"
+              type="text"
               required
               disabled={isSubmitting}
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="(602) 780-1140"
-              className="w-full p-3.5 rounded-xl border border-white/10 bg-[#0C0C0C] text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Sophie Copeland"
+              className="w-full p-3.5 rounded-xl border border-white/10 bg-black/45 text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50 backdrop-blur-sm placeholder-white/30"
             />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-[11px] font-semibold text-[#888888] uppercase tracking-wider mb-2">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                required
+                disabled={isSubmitting}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="(602) 780-1140"
+                className="w-full p-3.5 rounded-xl border border-white/10 bg-black/45 text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50 backdrop-blur-sm placeholder-white/30"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-[#888888] uppercase tracking-wider mb-2">
+                Email Address
+              </label>
+              <input
+                type="email"
+                required
+                disabled={isSubmitting}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="sophie@example.com"
+                className="w-full p-3.5 rounded-xl border border-white/10 bg-black/45 text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50 backdrop-blur-sm placeholder-white/30"
+              />
+            </div>
           </div>
 
           <div>
             <label className="block text-[11px] font-semibold text-[#888888] uppercase tracking-wider mb-2">
-              Email Address
+              Service Needed
             </label>
-            <input
-              type="email"
+            <select
+              disabled={isSubmitting}
+              value={serviceNeeded}
+              onChange={(e) => setServiceNeeded(e.target.value)}
+              className="w-full p-3.5 rounded-xl border border-white/10 bg-black/45 text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50 backdrop-blur-sm"
+            >
+              {serviceOptions.map((opt) => (
+                <option key={opt.id} value={opt.id} className="bg-[#111111] text-white">
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-semibold text-[#888888] uppercase tracking-wider mb-2">
+              Message
+            </label>
+            <textarea
               required
               disabled={isSubmitting}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="sophie@example.com"
-              className="w-full p-3.5 rounded-xl border border-white/10 bg-[#0C0C0C] text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Tell us about your electrical project or issue..."
+              className="w-full p-3.5 rounded-xl border border-white/10 bg-black/45 text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm min-h-[120px] disabled:opacity-50 backdrop-blur-sm placeholder-white/30"
             />
           </div>
-        </div>
 
-        <div>
-          <label className="block text-[11px] font-semibold text-[#888888] uppercase tracking-wider mb-2">
-            Service Needed
-          </label>
-          <select
+          <button
+            type="submit"
             disabled={isSubmitting}
-            value={serviceNeeded}
-            onChange={(e) => setServiceNeeded(e.target.value)}
-            className="w-full p-3.5 rounded-xl border border-white/10 bg-[#0C0C0C] text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50"
+            className="w-full py-4 bg-gradient-to-r from-[#FDE047] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] text-[#0C0C0C] font-bold text-sm rounded-xl transition-all duration-200 hover:shadow-[0_10px_20px_rgba(253,224,71,0.2)] active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {serviceOptions.map((opt) => (
-              <option key={opt.id} value={opt.id} className="bg-[#111111] text-white">
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-[11px] font-semibold text-[#888888] uppercase tracking-wider mb-2">
-            Message
-          </label>
-          <textarea
-            required
-            disabled={isSubmitting}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Tell us about your electrical project or issue..."
-            className="w-full p-3.5 rounded-xl border border-white/10 bg-[#0C0C0C] text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm min-h-[120px] disabled:opacity-50"
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full py-4 bg-gradient-to-r from-[#FDE047] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] text-[#0C0C0C] font-bold text-sm rounded-xl transition-all duration-200 hover:shadow-[0_10px_20px_rgba(253,224,71,0.2)] active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isSubmitting ? 'Sending Request...' : 'Request Free Quote'}
-        </button>
-      </form>
+            {isSubmitting ? 'Sending Request...' : 'Request Free Quote'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
