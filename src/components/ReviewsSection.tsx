@@ -229,6 +229,8 @@ export default function ReviewsSection({ reviews, onAddReview }: ReviewsSectionP
               key={filter.id}
               onClick={() => setActiveFilter(filter.id)}
               className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                filter.id === 'all' ? 'animate-luxury-glow' : ''
+              } ${
                 activeFilter === filter.id
                   ? 'bg-[#FDE047] text-[#0C0C0C]'
                   : 'bg-neutral-900 hover:bg-neutral-800 text-[#888888] hover:text-white border border-white/5'
@@ -241,7 +243,7 @@ export default function ReviewsSection({ reviews, onAddReview }: ReviewsSectionP
 
         <button
           onClick={() => setIsAddingReview(!isAddingReview)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#FDE047] hover:bg-[#FDE047]/90 text-[#0C0C0C] text-xs font-bold rounded-xl transition-all shadow-md active:scale-98 cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2.5 bg-[#FDE047] hover:bg-[#FDE047]/90 text-[#0C0C0C] text-xs font-bold rounded-xl transition-all shadow-md active:scale-98 cursor-pointer animate-luxury-glow"
         >
           <PenTool className="w-4 h-4 text-[#0C0C0C]" /> Write Verified Review
         </button>

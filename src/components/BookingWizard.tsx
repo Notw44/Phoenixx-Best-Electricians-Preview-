@@ -153,7 +153,7 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
   }
 
   return (
-    <div className="relative rounded-3xl border border-white/10 shadow-2xl p-6 sm:p-10 max-w-xl mx-auto overflow-hidden bg-black/45 backdrop-blur-md">
+    <div className="relative rounded-3xl border border-white/10 shadow-2xl p-6 sm:p-10 max-w-xl mx-auto overflow-hidden bg-[#0D0D0D]">
       <div className="relative z-10">
         {errorMessage && (
           <div className="mb-6 p-4 rounded-xl bg-red-950/20 border border-red-500/20 text-red-400 text-xs font-mono">
@@ -173,7 +173,7 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Sophie Copeland"
-              className="w-full p-3.5 rounded-xl border border-white/10 bg-black/45 text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50 backdrop-blur-sm placeholder-white/30"
+              className="w-full p-3.5 rounded-xl border border-white/10 bg-neutral-900 text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50 placeholder-white/30"
             />
           </div>
 
@@ -189,7 +189,7 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="(602) 780-1140"
-                className="w-full p-3.5 rounded-xl border border-white/10 bg-black/45 text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50 backdrop-blur-sm placeholder-white/30"
+                className="w-full p-3.5 rounded-xl border border-white/10 bg-neutral-900 text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50 placeholder-white/30"
               />
             </div>
 
@@ -204,7 +204,7 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="sophie@example.com"
-                className="w-full p-3.5 rounded-xl border border-white/10 bg-black/45 text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50 backdrop-blur-sm placeholder-white/30"
+                className="w-full p-3.5 rounded-xl border border-white/10 bg-neutral-900 text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50 placeholder-white/30"
               />
             </div>
           </div>
@@ -217,7 +217,7 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
               disabled={isSubmitting}
               value={serviceNeeded}
               onChange={(e) => setServiceNeeded(e.target.value)}
-              className="w-full p-3.5 rounded-xl border border-white/10 bg-black/45 text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50 backdrop-blur-sm"
+              className="w-full p-3.5 rounded-xl border border-white/10 bg-neutral-900 text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm disabled:opacity-50"
             >
               {serviceOptions.map((opt) => (
                 <option key={opt.id} value={opt.id} className="bg-[#111111] text-white">
@@ -237,14 +237,14 @@ export default function BookingWizard({ onLeadSubmitted, initialServiceId = '' }
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Tell us about your electrical project or issue..."
-              className="w-full p-3.5 rounded-xl border border-white/10 bg-black/45 text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm min-h-[120px] disabled:opacity-50 backdrop-blur-sm placeholder-white/30"
+              className="w-full p-3.5 rounded-xl border border-white/10 bg-neutral-900 text-white focus:outline-none focus:ring-1 focus:ring-[#FDE047] focus:border-[#FDE047] text-sm min-h-[120px] disabled:opacity-50 placeholder-white/30"
             />
           </div>
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-4 bg-gradient-to-r from-[#FDE047] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] text-[#0C0C0C] font-bold text-sm rounded-xl transition-all duration-200 hover:shadow-[0_10px_20px_rgba(253,224,71,0.2)] active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-4 bg-gradient-to-r from-[#FDE047] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] text-[#0C0C0C] font-bold text-sm rounded-xl transition-all duration-300 animate-luxury-glow active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
           >
             {isSubmitting ? 'Sending Request...' : 'Request Free Quote'}
           </button>

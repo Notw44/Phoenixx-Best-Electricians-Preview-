@@ -105,7 +105,7 @@ export default function InteractiveMap() {
             />
             <button
               type="submit"
-              className="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-[#FDE047] hover:bg-[#FDE047]/90 text-[#0C0C0C] rounded-lg text-xs font-bold transition-all cursor-pointer"
+              className="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-[#FDE047] hover:bg-[#FDE047]/90 text-[#0C0C0C] rounded-lg text-xs font-bold transition-all cursor-pointer animate-luxury-glow"
             >
               Verify Zip
             </button>

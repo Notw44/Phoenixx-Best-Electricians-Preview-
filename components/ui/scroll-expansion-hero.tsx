@@ -31,6 +31,7 @@ const ScrollExpandMedia = ({
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [status, setStatus] = useState<'idle' | 'entering' | 'entered'>('idle');
   const touchStartY = useRef<number>(0);
+  const hasEnteredOnce = useRef<boolean>(false);
 
   useEffect(() => {
     const checkIfMobile = (): void => {
@@ -46,11 +47,21 @@ const ScrollExpandMedia = ({
   const triggerEnter = () => {
     if (status !== 'idle') return;
     setStatus('entering');
+    hasEnteredOnce.current = true;
     setTimeout(() => {
       setStatus('entered');
-    }, 1200); // Luxurious cinematic zoom transition duration
+    }, 900); // match card zoom duration (900ms)
   };
 
+  const triggerExit = () => {
+    if (status !== 'entered') return;
+    setStatus('entering'); // Keep card full-screen, but trigger viewport slide-down
+    setTimeout(() => {
+      setStatus('idle'); // Once viewport has completely covered the screen, shrink the card back
+    }, 800); // match viewport slide-down duration (800ms)
+  };
+
+  // Listeners for entering the site (scrolling down / swiping up while in 'idle')
   useEffect(() => {
     if (status !== 'idle') return;
 
@@ -91,6 +102,50 @@ const ScrollExpandMedia = ({
     };
   }, [status]);
 
+  // Listeners for exiting the site (scrolling up / swiping down while at the top of the page in 'entered')
+  useEffect(() => {
+    if (status !== 'entered') return;
+
+    let touchStartScrollY = 0;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (window.scrollY <= 5 && e.deltaY < -10) {
+        triggerExit();
+      }
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartScrollY = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (window.scrollY <= 5) {
+        const touchEndY = e.touches[0].clientY;
+        if (touchEndY - touchStartScrollY > 40) { // Swiped down / scrolled up
+          triggerExit();
+        }
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (window.scrollY <= 5 && (e.key === 'ArrowUp' || e.key === 'PageUp')) {
+        triggerExit();
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [status]);
+
   // Lock page scrolling while the user is in the interactive intro screen
   useEffect(() => {
     if (status !== 'entered') {
@@ -109,169 +164,171 @@ const ScrollExpandMedia = ({
 
   return (
     <div className='relative w-full bg-[#0C0C0C] min-h-screen overflow-visible'>
-      <AnimatePresence mode="wait">
-        {status !== 'entered' && (
-          <motion.div
-            key="intro-viewport"
-            className="fixed inset-0 z-50 h-screen w-screen overflow-hidden bg-neutral-950 flex items-center justify-center select-none"
-            exit={{
-              y: '-100vh',
-              transition: { duration: 0.8, ease: [0.76, 0, 0.24, 1] }
-            }}
-          >
-            {/* Background image behind card - fades out as card expands */}
-            <motion.div
-              className='absolute inset-0 z-0 h-full'
-              initial={{ opacity: 1 }}
-              animate={{ opacity: status === 'entering' ? 0 : 1 }}
-              transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-            >
+      {/* 
+        Persistent intro-viewport avoids unmounting, preserving layout-states for 100% fluid transitions.
+        It slides cleanly up/down via y offsets and passes mouse/touch interactions to underlying site when entered.
+      */}
+      <motion.div
+        key="intro-viewport"
+        className={`fixed inset-0 z-50 h-screen w-screen overflow-hidden bg-neutral-950 flex items-center justify-center select-none ${
+          status === 'entered' ? 'pointer-events-none' : 'pointer-events-auto'
+        }`}
+        animate={{
+          y: status === 'entered' ? '-100vh' : '0vh'
+        }}
+        transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
+      >
+        {/* Background image behind card - fades out as card expands */}
+        <motion.div
+          className='absolute inset-0 z-0 h-full'
+          initial={{ opacity: 1 }}
+          animate={{ opacity: (status === 'entering' || status === 'entered') ? 0 : 1 }}
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <img
+            src={bgImageSrc}
+            alt='Background'
+            className='w-screen h-screen object-cover object-center filter blur-[6px] brightness-[0.35]'
+            referrerPolicy="no-referrer"
+          />
+          <div className='absolute inset-0 bg-black/40' />
+        </motion.div>
+
+        {/* Central zooming card - interactive trigger */}
+        <motion.div
+          className='relative z-10 overflow-hidden flex items-center justify-center shadow-[0_30px_70px_rgba(0,0,0,0.95)] cursor-pointer'
+          onClick={triggerEnter}
+          initial={false}
+          animate={{
+            width: (status === 'entering' || status === 'entered') ? '100vw' : (isMobile ? '85vw' : '45vw'),
+            height: (status === 'entering' || status === 'entered') ? '100vh' : (isMobile ? '65vh' : '75vh'),
+            borderRadius: (status === 'entering' || status === 'entered') ? '0px' : '24px',
+          }}
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {mediaType === 'video' ? (
+            mediaSrc.includes('youtube.com') ? (
+              <div className='absolute inset-0 w-full h-full pointer-events-none z-0'>
+                <iframe
+                  width='100%'
+                  height='100%'
+                  src={
+                    mediaSrc.includes('embed')
+                      ? mediaSrc +
+                        (mediaSrc.includes('?') ? '&' : '?') +
+                        'autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&disablekb=1&modestbranding=1'
+                      : mediaSrc.replace('watch?v=', 'embed/') +
+                        '?autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&disablekb=1&modestbranding=1&playlist=' +
+                        mediaSrc.split('v=')[1]
+                  }
+                  className='w-full h-full border-0 scale-105'
+                  allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+                  allowFullScreen
+                />
+              </div>
+            ) : (
+              <div className='absolute inset-0 w-full h-full pointer-events-none z-0'>
+                <video
+                  src={mediaSrc}
+                  poster={posterSrc}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload='auto'
+                  className='w-full h-full object-cover'
+                  controls={false}
+                  disablePictureInPicture
+                  disableRemotePlayback
+                />
+              </div>
+            )
+          ) : (
+            <div className='absolute inset-0 w-full h-full z-0'>
               <img
-                src={bgImageSrc}
-                alt='Background'
-                className='w-screen h-screen object-cover object-center filter blur-[6px] brightness-[0.35]'
+                src={mediaSrc}
+                alt={title || 'Media content'}
+                className='w-full h-full object-cover'
                 referrerPolicy="no-referrer"
               />
-              <div className='absolute inset-0 bg-black/40' />
-            </motion.div>
-
-            {/* Central zooming card - interactive trigger */}
-            <motion.div
-              className='relative z-10 overflow-hidden flex items-center justify-center shadow-[0_30px_70px_rgba(0,0,0,0.95)] cursor-pointer'
-              onClick={triggerEnter}
-              initial={false}
-              animate={{
-                width: status === 'entering' ? '100vw' : (isMobile ? '85vw' : '45vw'),
-                height: status === 'entering' ? '100vh' : (isMobile ? '65vh' : '75vh'),
-                borderRadius: status === 'entering' ? '0px' : '24px',
-              }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            >
-              {mediaType === 'video' ? (
-                mediaSrc.includes('youtube.com') ? (
-                  <div className='absolute inset-0 w-full h-full pointer-events-none z-0'>
-                    <iframe
-                      width='100%'
-                      height='100%'
-                      src={
-                        mediaSrc.includes('embed')
-                          ? mediaSrc +
-                            (mediaSrc.includes('?') ? '&' : '?') +
-                            'autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&disablekb=1&modestbranding=1'
-                          : mediaSrc.replace('watch?v=', 'embed/') +
-                            '?autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&disablekb=1&modestbranding=1&playlist=' +
-                            mediaSrc.split('v=')[1]
-                      }
-                      className='w-full h-full border-0 scale-105'
-                      allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
-                      allowFullScreen
-                    />
-                  </div>
-                ) : (
-                  <div className='absolute inset-0 w-full h-full pointer-events-none z-0'>
-                    <video
-                      src={mediaSrc}
-                      poster={posterSrc}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload='auto'
-                      className='w-full h-full object-cover'
-                      controls={false}
-                      disablePictureInPicture
-                      disableRemotePlayback
-                    />
-                  </div>
-                )
-              ) : (
-                <div className='absolute inset-0 w-full h-full z-0'>
-                  <img
-                    src={mediaSrc}
-                    alt={title || 'Media content'}
-                    className='w-full h-full object-cover'
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-              )}
-
-              {/* Ambient Dark Overlay over media for contrast */}
-              <motion.div
-                className='absolute inset-0 bg-black z-10 pointer-events-none'
-                animate={{ opacity: status === 'entering' ? 0.25 : 0.65 }}
-                transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-              />
-
-            </motion.div>
-
-            {/* Typography Overlay centered OVER the card */}
-            <div 
-              className='absolute inset-0 z-20 flex flex-col justify-between items-center text-center pointer-events-none select-none p-6 sm:p-12 overflow-visible'
-            >
-              {/* Top: Date / Brand Note */}
-              <div className='pt-8 sm:pt-14'>
-                {date && (
-                  <motion.p
-                    className='text-xs sm:text-sm font-mono tracking-[0.35em] uppercase text-[#FDE047] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)] whitespace-nowrap'
-                    animate={{ x: status === 'entering' ? '-100vw' : '0vw', opacity: status === 'entering' ? 0 : 1 }}
-                    transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-                  >
-                    {date}
-                  </motion.p>
-                )}
-              </div>
-
-              {/* Middle: Title text - ELITE CRAFTSMANSHIP */}
-              <div className='flex flex-col items-center justify-center gap-2 sm:gap-4 py-4 w-full overflow-visible'>
-                <motion.h2
-                  className='font-sans text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-light uppercase tracking-[0.4em] text-white/95 drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] whitespace-nowrap'
-                  animate={{ x: status === 'entering' ? '-100vw' : '0vw', opacity: status === 'entering' ? 0 : 1 }}
-                  transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  {firstWord}
-                </motion.h2>
-                <motion.h2
-                  className='font-sans text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black uppercase tracking-[0.2em] text-[#FDE047] drop-shadow-[0_4px_20px_rgba(0,0,0,0.95)] whitespace-nowrap -mr-[0.2em]'
-                  animate={{ x: status === 'entering' ? '100vw' : '0vw', opacity: status === 'entering' ? 0 : 1 }}
-                  transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  {restOfTitle}
-                </motion.h2>
-              </div>
-
-              {/* Bottom: Action Hint (Fades out quickly) */}
-              <div className='pb-8 sm:pb-14 pointer-events-auto'>
-                {scrollToExpand && (
-                  <motion.button
-                    onClick={triggerEnter}
-                    className='text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase text-white/60 hover:text-white transition-colors font-medium drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)] whitespace-nowrap flex flex-col items-center gap-2 cursor-pointer'
-                    animate={{ opacity: status === 'entering' ? 0 : 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <span>{scrollToExpand}</span>
-                    <motion.span 
-                      animate={{ y: [0, 5, 0] }}
-                      transition={{ repeat: Infinity, duration: 1.5 }}
-                      className="text-base text-[#FDE047]"
-                    >
-                      ↓
-                    </motion.span>
-                  </motion.button>
-                )}
-              </div>
-
             </div>
+          )}
 
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {/* Ambient Dark Overlay over media for contrast */}
+          <motion.div
+            className='absolute inset-0 bg-black z-10 pointer-events-none'
+            animate={{ opacity: (status === 'entering' || status === 'entered') ? 0.25 : 0.65 }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          />
+
+        </motion.div>
+
+        {/* Typography Overlay centered OVER the card */}
+        <div 
+          className='absolute inset-0 z-20 flex flex-col justify-between items-center text-center pointer-events-none select-none p-6 sm:p-12 overflow-visible'
+        >
+          {/* Top: Date / Brand Note */}
+          <div className='pt-8 sm:pt-14'>
+            {date && (
+              <motion.p
+                className='text-xs sm:text-sm font-mono tracking-[0.35em] uppercase text-[#FDE047] font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)] whitespace-nowrap'
+                animate={{ x: (status === 'entering' || status === 'entered') ? '-100vw' : '0vw', opacity: (status === 'entering' || status === 'entered') ? 0 : 1 }}
+                transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {date}
+              </motion.p>
+            )}
+          </div>
+
+          {/* Middle: Title text - ELITE CRAFTSMANSHIP */}
+          <div className='flex flex-col items-center justify-center gap-2 sm:gap-4 py-4 w-full overflow-visible'>
+            <motion.h2
+              className='font-sans text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-light uppercase tracking-[0.4em] text-white/95 drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] whitespace-nowrap'
+              animate={{ x: (status === 'entering' || status === 'entered') ? '-100vw' : '0vw', opacity: (status === 'entering' || status === 'entered') ? 0 : 1 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {firstWord}
+            </motion.h2>
+            <motion.h2
+              className='font-sans text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black uppercase tracking-[0.2em] text-[#FDE047] drop-shadow-[0_4px_20px_rgba(0,0,0,0.95)] whitespace-nowrap -mr-[0.2em]'
+              animate={{ x: (status === 'entering' || status === 'entered') ? '100vw' : '0vw', opacity: (status === 'entering' || status === 'entered') ? 0 : 1 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {restOfTitle}
+            </motion.h2>
+          </div>
+
+          {/* Bottom: Action Hint (Fades out quickly) */}
+          <div className='pb-8 sm:pb-14 pointer-events-auto'>
+            {scrollToExpand && (
+              <motion.button
+                onClick={triggerEnter}
+                className='text-[10px] sm:text-xs font-mono tracking-[0.25em] uppercase text-white/60 hover:text-white transition-colors font-medium drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)] whitespace-nowrap flex flex-col items-center gap-2 cursor-pointer'
+                animate={{ opacity: (status === 'entering' || status === 'entered') ? 0 : 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <span>{scrollToExpand}</span>
+                <motion.span 
+                  animate={{ y: [0, 5, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className="text-base text-[#FDE047]"
+                >
+                  ↓
+                </motion.span>
+              </motion.button>
+            )}
+          </div>
+
+        </div>
+
+      </motion.div>
 
       {/* Main site content rendered naturally with entering transition */}
       <motion.div 
         className="relative z-30 w-full bg-[#0C0C0C]"
         initial={{ opacity: 0 }}
         animate={{ opacity: status === 'entered' ? 1 : 0 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
+        transition={{ duration: 0.8, delay: 0.1 }}
       >
         {children}
       </motion.div>

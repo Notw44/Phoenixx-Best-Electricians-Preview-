@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Phone, Zap, Clock, ShieldCheck, MapPin } from 'lucide-react';
+import GunmetalLogo from './GunmetalLogo';
 
 interface HeaderProps {
   onOpenBooking: () => void;
@@ -63,9 +64,7 @@ export default function Header({ onOpenBooking }: HeaderProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex justify-between items-center">
           {/* Logo */}
           <a href="#" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-white/10 flex items-center justify-center text-[#FDE047] shadow-md transition-transform group-hover:scale-105">
-              <Zap className="w-5.5 h-5.5 fill-[#FDE047] text-[#FDE047] stroke-[1.5]" />
-            </div>
+            <GunmetalLogo size="lg" />
             <div>
               <span className="block serif text-xl font-bold tracking-tight text-white">
                 Phoenix Best
@@ -77,7 +76,7 @@ export default function Header({ onOpenBooking }: HeaderProps) {
           </a>
 
           {/* Nav Items (Desktop) */}
-          <nav className="hidden md:flex items-center gap-8 text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-400">
+          <nav className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8 text-[10px] xl:text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-400">
             {[
               { label: "Specialties", href: "#services" },
               { label: "Quote Estimator", href: "#quote-section" },
@@ -98,10 +97,10 @@ export default function Header({ onOpenBooking }: HeaderProps) {
           </nav>
 
           {/* Action Callouts */}
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 ml-4 lg:ml-8 xl:ml-12">
             <a
               href="tel:6027801140"
-              className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-[#FDE047]/10 hover:bg-[#FDE047]/20 transition-all text-[#FDE047] text-xs sm:text-sm font-bold border border-[#FDE047]/30"
+              className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-[#FDE047]/10 hover:bg-[#FDE047]/20 transition-all text-[#FDE047] text-xs sm:text-sm font-bold border border-[#FDE047]/30 shadow-[0_0_8px_rgba(253,224,71,0.05)]"
             >
               <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FDE047] animate-bounce" />
               <span className="hidden xs:inline">Call Tracy:</span>
@@ -110,7 +109,7 @@ export default function Header({ onOpenBooking }: HeaderProps) {
 
             <button
               onClick={onOpenBooking}
-              className="px-3.5 py-1.5 sm:px-5 sm:py-2 bg-gradient-to-r from-[#FDE047] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] text-[#0C0C0C] rounded-xl text-xs sm:text-sm font-bold tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(253,224,71,0.25)] hover:shadow-[0_0_25px_rgba(253,224,71,0.55)] active:scale-98 border border-yellow-200/40"
+              className="px-3.5 py-1.5 sm:px-5 sm:py-2 bg-gradient-to-r from-[#FDE047] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] text-[#0C0C0C] rounded-xl text-xs sm:text-sm font-bold tracking-wide transition-all duration-300 animate-luxury-glow active:scale-98 border border-yellow-200/40 cursor-pointer"
             >
               REQUEST FREE QUOTE
             </button>

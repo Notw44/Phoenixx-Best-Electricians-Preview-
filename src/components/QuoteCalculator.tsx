@@ -611,7 +611,7 @@ export default function QuoteCalculator({ onLeadSubmitted }: QuoteCalculatorProp
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-4 px-6 rounded-xl font-bold bg-[#FDE047] hover:bg-[#FDE047]/90 active:scale-[0.98] text-black transition-all cursor-pointer text-xs flex items-center justify-center gap-2 uppercase tracking-wider"
+                  className="w-full py-4 px-6 rounded-xl font-bold bg-[#FDE047] hover:bg-[#FDE047]/90 active:scale-[0.98] text-black transition-all cursor-pointer text-xs flex items-center justify-center gap-2 uppercase tracking-wider animate-luxury-glow"
                 >
                   {isSubmitting ? 'Reserving Estimate...' : 'Dispatch Quote Request'}
                   <ArrowRight className="w-4 h-4" />

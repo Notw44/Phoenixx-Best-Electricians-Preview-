@@ -7,6 +7,24 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --color-brand-primary: #fde047; /* yellow-300 / accent */
   --color-brand-accent: #fbbf24; /* amber-400 */
+
+  --animate-shimmer-fast: shimmer-anim 1.5s infinite linear;
+  @keyframes shimmer-anim {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  --animate-luxury-glow: glow-pulse 3s infinite ease-in-out;
+  @keyframes glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 12px rgba(253, 224, 71, 0.25), 0 0 0 1px rgba(253, 224, 71, 0.15);
+      filter: brightness(1);
+    }
+    50% {
+      box-shadow: 0 0 26px rgba(253, 224, 71, 0.7), 0 0 0 1.5px rgba(253, 224, 71, 0.45);
+      filter: brightness(1.15);
+    }
+  }
 }
 
 /* Custom styles for editorial high-end look */
@@ -48,4 +66,20 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #333333;
+}
+
+/* Portfolio Stack Sticky offsets for md screens and up */
+@media (min-width: 768px) {
+  .sticky-card-0 {
+    --sticky-top-offset-0: 84px;
+  }
+  .sticky-card-1 {
+    --sticky-top-offset-1: 104px;
+  }
+  .sticky-card-2 {
+    --sticky-top-offset-2: 124px;
+  }
+  .sticky-card-3 {
+    --sticky-top-offset-3: 144px;
+  }
 }

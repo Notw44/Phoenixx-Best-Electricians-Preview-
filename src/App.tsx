@@ -8,6 +8,7 @@ import { motion } from 'motion/react';
 import { supabase } from './lib/supabase';
 
 import Header from './components/Header';
+import GunmetalLogo from './components/GunmetalLogo';
 import BookingWizard from './components/BookingWizard';
 import ReviewsSection from './components/ReviewsSection';
 import InteractiveMap from './components/InteractiveMap';
@@ -22,7 +23,7 @@ import luxurySmartHomePanel from './assets/images/luxury_smart_home_panel_178300
 import designerLighting from './assets/images/designer_lighting_1783000392525.jpg';
 import electricianWorking from './assets/images/electrician_working_1783049484014.jpg';
 import smartHomeWiring from './assets/images/smart_home_wiring_1783049500442.jpg';
-import goldenElectricityBg from './assets/images/golden_electricity_bg_1783256632116.jpg';
+import luxuryQuoteBg from './assets/images/luxury_quote_bg_1783389801014.jpg';
 
 // Newly generated high-end black and gold electrician images
 import luxuryCircuitPanel from './assets/images/luxury_circuit_panel_1783294895636.jpg';
@@ -262,8 +263,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#0C0C0C] text-white font-sans leading-relaxed relative overflow-x-clip">
       
-      {/* Premium WebGL Cybernetic Radar Background - Subtly toned down by 75-80% as requested */}
-      <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.07]">
+      {/* Premium WebGL Animated Gold & Slate Steel Background - Blended perfectly for high-end luxury */}
+      <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.28]">
         <ShaderBackground />
       </div>
 
@@ -318,7 +319,7 @@ export default function App() {
           <div className="mt-14 flex flex-col xs:flex-row justify-center items-center gap-4">
             <button
               onClick={() => scrollToBooking()}
-              className="group w-full xs:w-auto px-8 py-4 bg-gradient-to-r from-[#FDE047] via-[#FFF59D] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] hover:scale-[1.02] hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(253,224,71,0.25)] text-[#0C0C0C] rounded-2xl text-sm font-bold tracking-wide transition-all duration-300 shadow-[0_0_20px_rgba(253,224,71,0.25)] active:scale-98 flex items-center justify-center gap-2.5 border border-yellow-200/50"
+              className="group w-full xs:w-auto px-8 py-4 bg-gradient-to-r from-[#FDE047] via-[#FFF59D] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] hover:scale-[1.02] hover:-translate-y-1 text-[#0C0C0C] rounded-2xl text-sm font-bold tracking-wide transition-all duration-300 animate-luxury-glow active:scale-98 flex items-center justify-center gap-2.5 border border-yellow-200/50 cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-[#0C0C0C] animate-pulse group-hover:rotate-12 transition-transform duration-300" />
               <span>REQUEST A FREE QUOTE</span>
@@ -416,7 +417,7 @@ export default function App() {
 
                   <button
                     onClick={() => scrollToBooking(srv.id)}
-                    className="w-full py-3.5 bg-gradient-to-r from-[#FDE047] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] text-[#0C0C0C] font-bold text-xs rounded-xl transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(253,224,71,0.25)] border border-yellow-200/40 shadow-sm active:scale-98 flex items-center justify-center gap-1.5"
+                    className="w-full py-3.5 bg-gradient-to-r from-[#FDE047] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] text-[#0C0C0C] font-bold text-xs rounded-xl transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 border border-yellow-200/40 shadow-sm active:scale-98 flex items-center justify-center gap-1.5 animate-luxury-glow cursor-pointer"
                   >
                     Request Pricing <ArrowRight className="w-3.5 h-3.5 transition-transform" />
                   </button>
@@ -507,7 +508,7 @@ export default function App() {
         <div className="absolute inset-0 z-0 select-none overflow-hidden pointer-events-none">
           <motion.div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${goldenElectricityBg})` }}
+            style={{ backgroundImage: `url(${luxuryQuoteBg})` }}
             animate={{
               scale: [1.02, 1.15, 1.05, 1.12, 1.02],
               x: [0, -15, 15, -8, 0],
@@ -732,9 +733,7 @@ export default function App() {
             {/* Logo/Identity */}
             <div className="space-y-4 md:col-span-2">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-white/15 flex items-center justify-center text-[#FDE047] shadow-md">
-                  <Zap className="w-5.5 h-5.5 fill-[#FDE047] text-[#FDE047] stroke-[1.5]" />
-                </div>
+                <GunmetalLogo size="md" />
                 <div>
                   <span className="block serif text-xl font-bold tracking-tight text-white">
                     Phoenix Best

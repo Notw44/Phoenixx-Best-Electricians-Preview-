@@ -362,7 +362,7 @@ export default function ContactForm() {
                       className={`w-full py-3.5 rounded-xl text-xs font-bold tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 border shadow-sm ${
                         isSubmitting 
                           ? 'bg-neutral-900 border-white/5 text-neutral-500 cursor-not-allowed' 
-                          : 'bg-gradient-to-r from-[#FDE047] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] text-[#0C0C0C] border-yellow-200/40 hover:scale-[1.01] hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(253,224,71,0.15)] active:scale-98 cursor-pointer'
+                          : 'bg-gradient-to-r from-[#FDE047] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] text-[#0C0C0C] border-yellow-200/40 hover:scale-[1.01] hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(253,224,71,0.15)] active:scale-98 cursor-pointer animate-luxury-glow'
                       }`}
                     >
                       {isSubmitting ? (
