@@ -14,6 +14,7 @@ import ReviewsSection from './components/ReviewsSection';
 import InteractiveMap from './components/InteractiveMap';
 import OwnerConsole from './components/OwnerConsole';
 import ContactForm from './components/ContactForm';
+import SlantedStackCarousel from './components/SlantedStackCarousel';
 import ShaderBackground from '@/components/ui/asd';
 import ScrollExpandMedia from '@/components/ui/scroll-expansion-hero';
 import { PortfolioStack } from '@/components/ui/portfolio-stack';
@@ -357,7 +358,7 @@ export default function App() {
       </section>
 
       {/* Specialties Bento Grid Section with spacious, luxurious vertical padding */}
-      <section id="services" className="py-44 sm:py-64 lg:py-72 bg-[#0C0C0C] border-b border-white/10 relative">
+      <section id="services" className="py-44 sm:py-64 lg:py-72 bg-[#0C0C0C] border-b border-white/10 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(rgba(253,224,71,0.01)_1px,transparent_1px)] [background-size:32px_32px] opacity-40 pointer-events-none" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -379,55 +380,8 @@ export default function App() {
             </p>
           </motion.div>
 
-          {/* Dynamic Service Cards - Deluxe staggered layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-14">
-            {SERVICES.map((srv, idx) => (
-              <motion.div 
-                key={srv.id}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.6, delay: idx * 0.08, ease: "easeOut" }}
-                whileHover={{ y: -8, scale: 1.03, transition: { duration: 0.2 } }}
-                className="group border border-white/10 hover:border-[#FDE047]/45 rounded-3xl p-8 sm:p-10 bg-[#111111]/75 backdrop-blur-md transition-all duration-300 shadow-xl hover:shadow-[0_30px_60px_rgba(0,0,0,0.6)] flex flex-col justify-between"
-              >
-                <div className="space-y-5">
-                  <div className="flex justify-between items-start">
-                    <div className="p-3 bg-[#0C0C0C] border border-white/10 rounded-2xl text-[#FDE047] group-hover:bg-[#FDE047] group-hover:text-[#0C0C0C] group-hover:rotate-6 transition-all duration-300 shadow-[0_0_15px_rgba(253,224,71,0.05)] group-hover:shadow-[0_0_20px_rgba(253,224,71,0.25)]">
-                      <Wrench className="w-5.5 h-5.5 transition-transform duration-300 drop-shadow-[0_0_6px_rgba(253,224,71,0.5)]" />
-                    </div>
-                    <span className="text-[10px] font-sans text-[#FDE047] bg-[#FDE047]/10 border border-[#FDE047]/30 px-2.5 py-1 rounded-full font-bold uppercase tracking-[0.08em] shadow-[0_0_10px_rgba(253,224,71,0.1)]">
-                      ROC Class-A
-                    </span>
-                  </div>
-
-                  <h3 className="font-wiggly text-xl text-white group-hover:text-[#FDE047] transition-colors tracking-wide leading-tight">
-                    {srv.title}
-                  </h3>
-                  <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed">
-                    {srv.description}
-                  </p>
-                </div>
-
-                <div className="mt-8 pt-6 border-t border-white/10">
-                  <div className="flex items-center justify-between text-xs text-neutral-400 mb-4">
-                    <span>Pricing Option</span>
-                    <span className="font-sans font-bold text-[#FDE047] drop-shadow-[0_0_6px_rgba(253,224,71,0.3)]">Request Quote</span>
-                  </div>
-
-                  <button
-                    onClick={() => scrollToBooking(srv.id)}
-                    className="w-full py-3.5 bg-gradient-to-r from-[#FDE047] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] text-[#0C0C0C] font-bold text-xs rounded-xl transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 border border-yellow-200/40 shadow-sm active:scale-98 flex items-center justify-center gap-1.5 animate-luxury-glow cursor-pointer"
-                  >
-                    Request Pricing <ArrowRight className="w-3.5 h-3.5 transition-transform" />
-                  </button>
-                  <p className="text-center text-[10px] text-neutral-400 mt-3.5 font-bold font-mono uppercase tracking-wider">
-                    {srv.popularFor}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          {/* Dynamic Service Cards - Slanted Stacking Carousel animation */}
+          <SlantedStackCarousel services={SERVICES} scrollToBooking={scrollToBooking} />
         </div>
       </section>
 
