@@ -77,15 +77,20 @@ const ScrollExpandMedia = ({
 
     const handleTouchMove = (e: TouchEvent) => {
       const touchEndY = e.touches[0].clientY;
-      if (touchStartY.current - touchEndY > 25) { // Swiped up / scrolled down (lower threshold)
+      const diff = touchStartY.current - touchEndY;
+      if (diff > 35) { // Swiped up / scrolled down (deliberate motion)
         triggerEnter();
+        if (e.cancelable) {
+          e.preventDefault();
+        }
       }
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
       if (e.changedTouches && e.changedTouches[0]) {
         const touchEndY = e.changedTouches[0].clientY;
-        if (touchStartY.current - touchEndY > 25) {
+        const diff = touchStartY.current - touchEndY;
+        if (diff > 35) {
           triggerEnter();
         }
       }
@@ -100,7 +105,7 @@ const ScrollExpandMedia = ({
 
     window.addEventListener('wheel', handleWheel, { passive: true });
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
     window.addEventListener('touchend', handleTouchEnd, { passive: true });
     window.addEventListener('keydown', handleKeyDown);
 
@@ -117,7 +122,7 @@ const ScrollExpandMedia = ({
   useEffect(() => {
     if (status !== 'entered') return;
 
-    let touchStartScrollY = 0;
+    let touchStartScrollY = -99999;
 
     const getScrollTop = () => {
       return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
@@ -130,25 +135,45 @@ const ScrollExpandMedia = ({
     };
 
     const handleTouchStart = (e: TouchEvent) => {
-      touchStartScrollY = e.touches[0].clientY;
+      if (getScrollTop() <= 15) {
+        touchStartScrollY = e.touches[0].clientY;
+      } else {
+        touchStartScrollY = -99999;
+      }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (getScrollTop() <= 15) {
-        const touchEndY = e.touches[0].clientY;
-        if (touchEndY - touchStartScrollY > 35) { // Swiped down / scrolled up (optimized threshold)
-          triggerExit();
+      const scrollTop = getScrollTop();
+      if (scrollTop <= 15) {
+        const currentY = e.touches[0].clientY;
+        if (touchStartScrollY === -99999) {
+          // Continuous scrolling reached the top; establish a fresh baseline
+          touchStartScrollY = currentY;
+          return;
         }
+        const diff = currentY - touchStartScrollY;
+        if (diff > 45) { // Deliberate swipe down once at the top
+          triggerExit();
+          if (e.cancelable) {
+            e.preventDefault();
+          }
+        }
+      } else {
+        // Scrolling elsewhere on the page invalidates the baseline
+        touchStartScrollY = -99999;
       }
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (getScrollTop() <= 15 && e.changedTouches && e.changedTouches[0]) {
+      const scrollTop = getScrollTop();
+      if (scrollTop <= 15 && touchStartScrollY !== -99999 && e.changedTouches && e.changedTouches[0]) {
         const touchEndY = e.changedTouches[0].clientY;
-        if (touchEndY - touchStartScrollY > 35) {
+        const diff = touchEndY - touchStartScrollY;
+        if (diff > 45) {
           triggerExit();
         }
       }
+      touchStartScrollY = -99999;
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -159,7 +184,7 @@ const ScrollExpandMedia = ({
 
     window.addEventListener('wheel', handleWheel, { passive: true });
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
     window.addEventListener('touchend', handleTouchEnd, { passive: true });
     window.addEventListener('keydown', handleKeyDown);
 
