@@ -43,27 +43,28 @@ export default function ContactForm() {
     if (supabase) {
       try {
         const { error } = await supabase
-          .from('contacts')
+          .from('quotes')
           .insert([{
             name: name.trim(),
             email: email.trim(),
-            phone: phone.trim() || null,
-            message: message.trim(),
+            phone: phone.trim() || 'Not Provided',
+            service_requested: 'General Message Inquiry',
+            project_description: message.trim(),
             created_at: new Date().toISOString()
           }]);
 
         if (!error) {
           savedToSupabase = true;
-          console.log("Contact successfully saved directly to Supabase.");
+          console.log("Contact successfully saved directly to Supabase 'quotes' table.");
         } else {
-          console.error("Direct Supabase insert failed:", error.message);
+          console.error("Direct Supabase 'quotes' insert failed:", error.message);
           setSubmitStatus('error');
           setErrorMessage("Supabase error: " + error.message);
           setIsSubmitting(false);
           return;
         }
       } catch (err: any) {
-        console.error("Direct Supabase exception:", err);
+        console.error("Direct Supabase 'quotes' exception:", err);
         setSubmitStatus('error');
         setErrorMessage("Supabase exception: " + (err.message || err));
         setIsSubmitting(false);

@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS public.quotes (
     phone text NOT NULL,
     service_requested text NOT NULL,
     project_description text NOT NULL,
+    status text DEFAULT 'pending' NOT NULL,
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

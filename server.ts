@@ -36,7 +36,7 @@ if (supabase) {
 }
 
 // Table presence flags to gracefully bypass missing Supabase tables and prevent noisy logs
-let isLeadsTableMissing = false;
+let isQuotesTableMissing = false;
 let isReviewsTableMissing = false;
 let isContactsTableMissing = false;
 
@@ -222,30 +222,39 @@ app.use(express.json());
 async function seedSupabaseIfNeeded() {
   if (!supabase) return;
   try {
-    // 1. Seed Leads
-    const { data: existingLeads, error: leadsError } = await supabase
-      .from("leads")
+    // 1. Seed Quotes
+    const { data: existingQuotes, error: quotesError } = await supabase
+      .from("quotes")
       .select("id")
       .limit(1);
 
-    if (leadsError) {
-      if (leadsError.message.includes("Could not find the table")) {
-        isLeadsTableMissing = true;
-        console.log("Supabase 'leads' table is missing from schema cache. Graceful local fallback active.");
+    if (quotesError) {
+      if (quotesError.message.includes("Could not find the table")) {
+        isQuotesTableMissing = true;
+        console.log("Supabase 'quotes' table is missing from schema cache. Graceful local fallback active.");
       } else {
-        console.log("Supabase 'leads' table check returned error:", leadsError.message);
+        console.log("Supabase 'quotes' table check returned error:", quotesError.message);
       }
     } else {
-      isLeadsTableMissing = false;
-      if (!existingLeads || existingLeads.length === 0) {
-        console.log("Supabase 'leads' table is empty. Seeding initial leads...");
-        const { error: insertLeadsError } = await supabase
-          .from("leads")
-          .insert(INITIAL_LEADS);
-        if (insertLeadsError) {
-          console.log("Failed to seed initial leads in Supabase:", insertLeadsError.message);
+      isQuotesTableMissing = false;
+      if (!existingQuotes || existingQuotes.length === 0) {
+        console.log("Supabase 'quotes' table is empty. Seeding initial quotes...");
+        const initialQuotes = INITIAL_LEADS.map(l => ({
+          name: l.name,
+          email: l.email,
+          phone: l.phone,
+          service_requested: l.serviceNeeded,
+          project_description: `${l.scopeSize}. ${l.details}`,
+          status: l.status || "pending",
+          created_at: new Date().toISOString()
+        }));
+        const { error: insertQuotesError } = await supabase
+          .from("quotes")
+          .insert(initialQuotes);
+        if (insertQuotesError) {
+          console.log("Failed to seed initial quotes in Supabase:", insertQuotesError.message);
         } else {
-          console.log("Initial leads successfully seeded in Supabase!");
+          console.log("Initial quotes successfully seeded in Supabase!");
         }
       }
     }
@@ -303,25 +312,38 @@ async function seedSupabaseIfNeeded() {
 
 // Get all leads
 app.get("/api/leads", async (req, res) => {
-  if (supabase && !isLeadsTableMissing) {
+  if (supabase && !isQuotesTableMissing) {
     try {
       const { data, error } = await supabase
-        .from("leads")
+        .from("quotes")
         .select("*")
-        .order("submittedAt", { ascending: false });
+        .order("id", { ascending: false });
 
       if (error) {
         if (error.message.includes("Could not find the table")) {
-          isLeadsTableMissing = true;
-          console.log("Supabase 'leads' table is missing. Falling back to local database.");
+          isQuotesTableMissing = true;
+          console.log("Supabase 'quotes' table is missing. Falling back to local database.");
         } else {
-          console.log("Supabase select leads info:", error.message);
+          console.log("Supabase select quotes info:", error.message);
         }
       } else {
-        return res.json(data || []);
+        const mapped = (data || []).map((q: any) => ({
+          id: 'QTE-' + q.id,
+          name: q.name,
+          phone: q.phone,
+          email: q.email,
+          serviceNeeded: q.service_requested,
+          scopeSize: q.project_description,
+          details: '',
+          status: q.status || 'pending',
+          submittedAt: q.created_at ? new Date(q.created_at).toLocaleString() : 'Just now',
+          estimatedPrice: 'Price Pending',
+          preferredTime: 'Flexible'
+        }));
+        return res.json(mapped);
       }
     } catch (e) {
-      console.log("Supabase select leads exception:", e);
+      console.log("Supabase select quotes exception:", e);
     }
   }
   const db = getDB();
@@ -358,26 +380,47 @@ app.post("/api/leads", async (req, res) => {
     photoUrl: photoUrl || ""
   };
 
-  if (supabase && !isLeadsTableMissing) {
+  if (supabase && !isQuotesTableMissing) {
     try {
       const { data, error } = await supabase
-        .from("leads")
-        .insert([newLead])
+        .from("quotes")
+        .insert([{
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          service_requested: serviceNeeded || "General Consultation",
+          project_description: details || scopeSize || "No additional details provided",
+          status: "pending",
+          created_at: new Date().toISOString()
+        }])
         .select()
         .single();
 
       if (error) {
         if (error.message.includes("Could not find the table")) {
-          isLeadsTableMissing = true;
-          console.log("Supabase 'leads' table is missing. Falling back to local database.");
+          isQuotesTableMissing = true;
+          console.log("Supabase 'quotes' table is missing. Falling back to local database.");
         } else {
-          console.log("Supabase insert lead info:", error.message);
+          console.log("Supabase insert quote info:", error.message);
         }
       } else {
-        return res.status(201).json(data);
+        const mapped = {
+          id: 'QTE-' + data.id,
+          name: data.name,
+          phone: data.phone,
+          email: data.email,
+          serviceNeeded: data.service_requested,
+          scopeSize: data.project_description,
+          details: '',
+          status: data.status || 'pending',
+          submittedAt: data.created_at ? new Date(data.created_at).toLocaleString() : 'Just now',
+          estimatedPrice: 'Price Pending',
+          preferredTime: 'Flexible'
+        };
+        return res.status(201).json(mapped);
       }
     } catch (e) {
-      console.log("Supabase insert lead exception:", e);
+      console.log("Supabase insert quote exception:", e);
     }
   }
 
@@ -396,27 +439,41 @@ app.patch("/api/leads/:id/status", async (req, res) => {
     return res.status(400).json({ error: "Invalid status value." });
   }
 
-  if (supabase && !isLeadsTableMissing) {
+  if (supabase && !isQuotesTableMissing) {
     try {
+      const numericId = id.startsWith('QTE-') ? id.replace('QTE-', '') : id;
       const { data, error } = await supabase
-        .from("leads")
+        .from("quotes")
         .update({ status })
-        .eq("id", id)
+        .eq("id", numericId)
         .select()
         .single();
 
       if (error) {
         if (error.message.includes("Could not find the table")) {
-          isLeadsTableMissing = true;
-          console.log("Supabase 'leads' table is missing. Falling back to local database.");
+          isQuotesTableMissing = true;
+          console.log("Supabase 'quotes' table is missing. Falling back to local database.");
         } else {
-          console.log("Supabase update lead status info:", error.message);
+          console.log("Supabase update quote status info:", error.message);
         }
       } else {
-        return res.json(data);
+        const mapped = {
+          id: 'QTE-' + data.id,
+          name: data.name,
+          phone: data.phone,
+          email: data.email,
+          serviceNeeded: data.service_requested,
+          scopeSize: data.project_description,
+          details: '',
+          status: data.status || 'pending',
+          submittedAt: data.created_at ? new Date(data.created_at).toLocaleString() : 'Just now',
+          estimatedPrice: 'Price Pending',
+          preferredTime: 'Flexible'
+        };
+        return res.json(mapped);
       }
     } catch (e) {
-      console.log("Supabase update lead status exception:", e);
+      console.log("Supabase update quote status exception:", e);
     }
   }
 
@@ -436,25 +493,26 @@ app.patch("/api/leads/:id/status", async (req, res) => {
 app.delete("/api/leads/:id", async (req, res) => {
   const { id } = req.params;
 
-  if (supabase && !isLeadsTableMissing) {
+  if (supabase && !isQuotesTableMissing) {
     try {
+      const numericId = id.startsWith('QTE-') ? id.replace('QTE-', '') : id;
       const { error } = await supabase
-        .from("leads")
+        .from("quotes")
         .delete()
-        .eq("id", id);
+        .eq("id", numericId);
 
       if (error) {
         if (error.message.includes("Could not find the table")) {
-          isLeadsTableMissing = true;
-          console.log("Supabase 'leads' table is missing. Falling back to local database.");
+          isQuotesTableMissing = true;
+          console.log("Supabase 'quotes' table is missing. Falling back to local database.");
         } else {
-          console.log("Supabase delete lead info:", error.message);
+          console.log("Supabase delete quote info:", error.message);
         }
       } else {
-        return res.json({ success: true, message: "Lead successfully deleted from Supabase." });
+        return res.json({ success: true, message: "Quote successfully deleted from Supabase." });
       }
     } catch (e) {
-      console.log("Supabase delete lead exception:", e);
+      console.log("Supabase delete quote exception:", e);
     }
   }
 
@@ -472,25 +530,25 @@ app.delete("/api/leads/:id", async (req, res) => {
 
 // Purge all leads / Reset
 app.post("/api/leads/purge", async (req, res) => {
-  if (supabase && !isLeadsTableMissing) {
+  if (supabase && !isQuotesTableMissing) {
     try {
       const { error } = await supabase
-        .from("leads")
+        .from("quotes")
         .delete()
-        .neq("id", "");
+        .neq("id", 0);
 
       if (error) {
         if (error.message.includes("Could not find the table")) {
-          isLeadsTableMissing = true;
-          console.log("Supabase 'leads' table is missing. Falling back to local database.");
+          isQuotesTableMissing = true;
+          console.log("Supabase 'quotes' table is missing. Falling back to local database.");
         } else {
-          console.log("Supabase purge leads info:", error.message);
+          console.log("Supabase purge quotes info:", error.message);
         }
       } else {
-        return res.json({ success: true, message: "All leads successfully purged from Supabase." });
+        return res.json({ success: true, message: "All quotes successfully purged from Supabase." });
       }
     } catch (e) {
-      console.log("Supabase purge leads exception:", e);
+      console.log("Supabase purge quotes exception:", e);
     }
   }
 
@@ -502,28 +560,50 @@ app.post("/api/leads/purge", async (req, res) => {
 
 // Reset leads back to original seed leads
 app.post("/api/leads/reset", async (req, res) => {
-  if (supabase && !isLeadsTableMissing) {
+  if (supabase && !isQuotesTableMissing) {
     try {
       // Delete existing
-      await supabase.from("leads").delete().neq("id", "");
+      await supabase.from("quotes").delete().neq("id", 0);
       // Re-insert
+      const initialQuotes = INITIAL_LEADS.map(l => ({
+        name: l.name,
+        email: l.email,
+        phone: l.phone,
+        service_requested: l.serviceNeeded,
+        project_description: `${l.scopeSize}. ${l.details}`,
+        status: l.status || "pending",
+        created_at: new Date().toISOString()
+      }));
       const { data, error } = await supabase
-        .from("leads")
-        .insert(INITIAL_LEADS)
+        .from("quotes")
+        .insert(initialQuotes)
         .select();
 
       if (error) {
         if (error.message.includes("Could not find the table")) {
-          isLeadsTableMissing = true;
-          console.log("Supabase 'leads' table is missing. Falling back to local database.");
+          isQuotesTableMissing = true;
+          console.log("Supabase 'quotes' table is missing. Falling back to local database.");
         } else {
-          console.log("Supabase reset leads info:", error.message);
+          console.log("Supabase reset quotes info:", error.message);
         }
       } else {
-        return res.json(data || []);
+        const mapped = (data || []).map((q: any) => ({
+          id: 'QTE-' + q.id,
+          name: q.name,
+          phone: q.phone,
+          email: q.email,
+          serviceNeeded: q.service_requested,
+          scopeSize: q.project_description,
+          details: '',
+          status: q.status || 'pending',
+          submittedAt: q.created_at ? new Date(q.created_at).toLocaleString() : 'Just now',
+          estimatedPrice: 'Price Pending',
+          preferredTime: 'Flexible'
+        }));
+        return res.json(mapped);
       }
     } catch (e) {
-      console.log("Supabase reset leads exception:", e);
+      console.log("Supabase reset quotes exception:", e);
     }
   }
 

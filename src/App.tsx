@@ -16,7 +16,7 @@ import ContactForm from './components/ContactForm';
 import ShaderBackground from '@/components/ui/asd';
 import ScrollExpandMedia from '@/components/ui/scroll-expansion-hero';
 import { PortfolioStack } from '@/components/ui/portfolio-stack';
-import { VolumetricStudio } from '@/components/ui/volumetric-studio';
+import QuoteCalculator from './components/QuoteCalculator';
 
 import luxurySmartHomePanel from './assets/images/luxury_smart_home_panel_1783000379209.jpg';
 import designerLighting from './assets/images/designer_lighting_1783000392525.jpg';
@@ -478,76 +478,23 @@ export default function App() {
         </div>
       </section>
 
-      {/* Interactive Volumetric Lighting Studio Showcase */}
-      <section id="ambient-studio" className="py-44 sm:py-64 lg:py-72 bg-black border-b border-white/10 relative overflow-hidden">
+      {/* Interactive Project Cost Estimator & Quote Section */}
+      <section id="quote-section" className="py-24 sm:py-32 bg-black border-b border-white/10 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(rgba(253,224,71,0.01)_1px,transparent_1px)] [background-size:32px_32px] opacity-40 pointer-events-none" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
-          <div className="text-center max-w-2xl mx-auto mb-20">
+          <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="label-caps tracking-[0.2em] text-[#FDE047]">
-              Interactive Simulation
+              Interactive Estimator
             </span>
             <h2 className="serif text-3xl sm:text-4xl font-normal text-white mt-4">
-              Physically-Accurate Volumetric Lighting
+              Instant Project Cost Estimator
             </h2>
             <p className="text-neutral-400 text-sm sm:text-base mt-4">
-              Interact with Tracy's masterfully wired lighting setups. This real-time 3D simulation renders physical light cones, reflections, and premium dimming scenes.
+              Select your electrical service, customize your requirements, and receive a physically accurate cost calculation with options to instantly dispatch Tracy.
             </p>
           </div>
 
-          <div className="w-full h-[600px] sm:h-[800px] relative bg-black overflow-hidden font-sans rounded-3xl border border-white/10 shadow-2xl">
-            <VolumetricStudio>
-              {/* DUAL DIMENSION HERO UI */}
-              <div className="flex flex-col items-center justify-center w-full h-full text-center px-4 relative z-10 pointer-events-none">
-                
-                {/* Title */}
-                <motion.h1
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 1.0, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="text-4xl md:text-6xl lg:text-7xl leading-none mb-6 font-bold tracking-tight text-transparent bg-clip-text bg-linear-to-b from-white to-white/40 drop-shadow-2xl"
-                >
-                  Illumine in a<br />new dimension.
-                </motion.h1>
-
-                {/* Subtitle */}
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 1.2, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="text-base md:text-lg max-w-2xl mb-10 text-white/50 font-medium"
-                >
-                  Phoenix Best Electricians brings high-fidelity Lutron and Crestron automated lighting arrays directly to your living space.
-                </motion.p>
-
-                {/* CTAs */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 1.4, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="flex flex-col sm:flex-row gap-4 pointer-events-auto"
-                >
-                  <button 
-                    onClick={() => scrollToBooking('ceiling_fan_lighting')}
-                    className="px-8 py-4 font-bold transition-transform hover:scale-105 active:scale-95 bg-white text-black rounded-full shadow-[0_0_20px_rgba(255,255,255,0.2)] cursor-pointer"
-                  >
-                    Design Your System
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const el = document.getElementById('estimate-section');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="px-8 py-4 font-bold transition-transform hover:scale-105 active:scale-95 bg-transparent text-white border border-white/20 rounded-full hover:bg-white/10 cursor-pointer"
-                  >
-                    Request Free Quote
-                  </button>
-                </motion.div>
-              </div>
-            </VolumetricStudio>
-          </div>
+          <QuoteCalculator onLeadSubmitted={handleLeadSubmitted} />
         </div>
       </section>
 

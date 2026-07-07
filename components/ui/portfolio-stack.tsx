@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'motion/react';
+import { motion, useScroll, useTransform, useSpring } from 'motion/react';
 
 interface ProjectSpec {
 	label: string;
@@ -28,6 +28,13 @@ export function PortfolioStack({ projects }: PortfolioStackProps) {
 		offset: ["start start", "end end"]
 	});
 
+	const smoothProgress = useSpring(scrollYProgress, {
+		stiffness: 80,
+		damping: 24,
+		mass: 0.1,
+		restDelta: 0.001
+	});
+
 	return (
 		<div ref={containerRef} className="relative w-full py-12">
 			<div className="flex flex-col gap-[12vh]">
@@ -38,7 +45,7 @@ export function PortfolioStack({ projects }: PortfolioStackProps) {
 							project={project} 
 							index={index} 
 							total={projects.length}
-							scrollYProgress={scrollYProgress}
+							scrollYProgress={smoothProgress}
 						/>
 					);
 				})}
@@ -59,31 +66,30 @@ function ProjectCard({ project, index, total, scrollYProgress }: ProjectCardProp
 	const cardRef = useRef<HTMLDivElement>(null);
 
 	// Calculate a range of scroll progress dedicated to this specific card's transition.
-	// As we scroll, previous cards should scale down slightly and dim.
 	const startProgress = index / total;
 	const endProgress = (index + 1) / total;
 
-	// Scale and opacity effects for cards underneath.
-	// The very last card doesn't need to scale down since nothing stacks on top of it.
+	// Scale effects for cards underneath.
 	const isLast = index === total - 1;
 	
-	// Track scroll input inside this card's viewport range to apply subtle scaling/shadow/darkening
+	// Track scroll input inside this card's viewport range to apply subtle scaling
 	const scale = useTransform(
 		scrollYProgress,
 		[startProgress, endProgress],
-		[1, isLast ? 1 : 0.95]
+		[1, isLast ? 1 : 0.97]
 	);
 
+	// Maintain full solid opacity and zero blur so cards underneath remain beautifully clear and readable.
 	const opacity = useTransform(
 		scrollYProgress,
 		[startProgress, endProgress],
-		[1, isLast ? 1 : 0.6]
+		[1, 1]
 	);
 
 	const blur = useTransform(
 		scrollYProgress,
 		[startProgress, endProgress],
-		["0px", isLast ? "0px" : "3px"]
+		["0px", "0px"]
 	);
 
 	return (
@@ -101,7 +107,7 @@ function ProjectCard({ project, index, total, scrollYProgress }: ProjectCardProp
 					opacity,
 					filter: `blur(${blur})`,
 				}}
-				className="w-full max-w-5xl h-auto md:h-[480px] rounded-3xl border border-white/10 bg-neutral-950/90 backdrop-blur-xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] overflow-hidden flex flex-col md:flex-row group transition-all duration-300 hover:border-[#FDE047]/20"
+				className="w-full max-w-5xl h-auto md:h-[480px] rounded-3xl border border-white/10 bg-[#141414] shadow-[0_25px_60px_rgba(0,0,0,0.95)] overflow-hidden flex flex-col md:flex-row group transition-all duration-300 hover:border-[#FDE047]/20"
 			>
 				{/* Image Container - Left side or Right side stagger based on index for architectural variety */}
 				<div className={`w-full md:w-[55%] h-[240px] md:h-full relative overflow-hidden ${index % 2 === 1 ? 'md:order-last' : ''}`}>
