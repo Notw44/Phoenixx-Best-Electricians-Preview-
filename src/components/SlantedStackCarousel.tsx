@@ -108,6 +108,7 @@ export default function SlantedStackCarousel({ services, scrollToBooking }: Slan
               style={{
                 zIndex,
                 transformOrigin: 'bottom center',
+                pointerEvents: isExited ? 'none' : 'auto',
               }}
               animate={{
                 scale,
@@ -129,7 +130,7 @@ export default function SlantedStackCarousel({ services, scrollToBooking }: Slan
               } : undefined}
               onClick={() => {
                 if (!isActive && !isExited) {
-                  setActiveIndex(index);
+                  handleNext();
                 }
               }}
               className={`absolute w-full max-w-[280px] xs:max-w-[310px] sm:max-w-[390px] md:max-w-[440px] lg:max-w-[470px] border rounded-3xl p-5 sm:p-8 lg:p-10 bg-[#111111]/95 backdrop-blur-md select-none transition-colors duration-300 ${
