@@ -58,7 +58,7 @@ export default function SlantedStackCarousel({ services, scrollToBooking }: Slan
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Interactive Navigation Instructions */}
-      <div className="mb-6 flex items-center gap-2 px-4 py-2 rounded-full bg-[#161616] border border-white/5 text-neutral-400 text-[10px] sm:text-[11px] uppercase tracking-widest font-mono shadow-md animate-pulse">
+      <div className="mb-6 flex items-center gap-2 px-4 py-2 rounded-full bg-[#161616] border border-white/10 text-neutral-200 text-[10px] sm:text-[11px] uppercase tracking-widest font-mono shadow-md animate-pulse">
         <Sparkles className="w-3.5 h-3.5 text-[#FDE047]" />
         <span>Click the next card to cycle through jobs ({activeIndex + 1}/{total})</span>
       </div>
