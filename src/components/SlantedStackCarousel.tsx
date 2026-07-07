@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { 
   Cpu, Sun, ZapOff, Fan, ToggleRight, Building2, 
-  ChevronLeft, ChevronRight, ArrowRight, Wrench, Sparkles, Smartphone
+  ChevronLeft, ChevronRight, ArrowRight, Wrench, Sparkles 
 } from 'lucide-react';
 import { Service } from '../types';
 
@@ -26,8 +26,6 @@ export default function SlantedStackCarousel({ services, scrollToBooking }: Slan
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [windowWidth, setWindowWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 1200);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const lastScrollTime = useRef<number>(0);
 
   const total = services.length;
 
@@ -53,85 +51,16 @@ export default function SlantedStackCarousel({ services, scrollToBooking }: Slan
     setActiveIndex((prev) => (prev - 1 + total) % total);
   };
 
-  // Drag end handler for mobile/tablet swipe gestures
-  const handleDragEnd = (event: any, info: any) => {
-    const swipeThreshold = 40; // light threshold for mobile flick responses
-    if (info.offset.x < -swipeThreshold) {
-      handleNext();
-    } else if (info.offset.x > swipeThreshold) {
-      handlePrev();
-    }
-  };
-
-  // Intercept scroll/wheel events on mouse-driven devices to cycle cards
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handleWheel = (e: WheelEvent) => {
-      // If deltaY is very small, ignore
-      if (Math.abs(e.deltaY) < 15) return;
-
-      const now = Date.now();
-      const cooldown = 750; // smooth cooldown for premium transition feeling
-
-      // Determine if we should lock scroll to change slides
-      const isIntercepting = 
-        (e.deltaY > 0 && activeIndex < total - 1) || 
-        (e.deltaY < 0 && activeIndex > 0);
-
-      if (isIntercepting) {
-        e.preventDefault();
-      }
-
-      // Check if cooldown has elapsed
-      if (now - lastScrollTime.current < cooldown) {
-        return;
-      }
-
-      if (e.deltaY > 0) {
-        if (activeIndex < total - 1) {
-          lastScrollTime.current = now;
-          handleNext();
-        }
-      } else {
-        if (activeIndex > 0) {
-          lastScrollTime.current = now;
-          handlePrev();
-        }
-      }
-    };
-
-    // Only apply wheel listener if not a mobile screen to avoid conflict with finger scrolling
-    if (!isMobile) {
-      container.addEventListener('wheel', handleWheel, { passive: false });
-    }
-    
-    return () => {
-      container.removeEventListener('wheel', handleWheel);
-    };
-  }, [activeIndex, total, isMobile]);
-
   return (
     <div 
-      ref={containerRef}
       className="relative w-full max-w-5xl mx-auto px-2 sm:px-6 py-6 sm:py-12 flex flex-col items-center group/container"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Mobile/Tablet Swipe & Interactive Navigation Instructions */}
-      <div className="mb-6 flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.02] border border-white/5 text-neutral-400 text-[10px] sm:text-[11px] uppercase tracking-widest font-mono animate-pulse">
-        {isMobile ? (
-          <>
-            <Smartphone className="w-3.5 h-3.5 text-[#FDE047]" />
-            <span>Swipe Card or Tap Controls ({activeIndex + 1}/{total})</span>
-          </>
-        ) : (
-          <>
-            <Sparkles className="w-3.5 h-3.5 text-[#FDE047]" />
-            <span>Scroll Mouse or Drag to Cycle ({activeIndex + 1}/{total})</span>
-          </>
-        )}
+      {/* Interactive Navigation Instructions */}
+      <div className="mb-6 flex items-center gap-2 px-4 py-2 rounded-full bg-[#161616] border border-white/5 text-neutral-400 text-[10px] sm:text-[11px] uppercase tracking-widest font-mono shadow-md animate-pulse">
+        <Sparkles className="w-3.5 h-3.5 text-[#FDE047]" />
+        <span>Click the next card to cycle through jobs ({activeIndex + 1}/{total})</span>
       </div>
 
       {/* Immersive 3D Stage Container - Sized precisely for responsive viewports */}
@@ -198,10 +127,6 @@ export default function SlantedStackCarousel({ services, scrollToBooking }: Slan
                 scale: 1.015,
                 transition: { duration: 0.2, ease: 'easeOut' }
               } : undefined}
-              drag={isActive ? "x" : false}
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={isMobile ? 0.35 : 0.4}
-              onDragEnd={handleDragEnd}
               onClick={() => {
                 if (!isActive && !isExited) {
                   setActiveIndex(index);
@@ -209,7 +134,7 @@ export default function SlantedStackCarousel({ services, scrollToBooking }: Slan
               }}
               className={`absolute w-full max-w-[280px] xs:max-w-[310px] sm:max-w-[390px] md:max-w-[440px] lg:max-w-[470px] border rounded-3xl p-5 sm:p-8 lg:p-10 bg-[#111111]/95 backdrop-blur-md select-none transition-colors duration-300 ${
                 isActive 
-                  ? 'border-[#FDE047]/35 cursor-grab active:cursor-grabbing shadow-[0_20px_50px_rgba(253,224,71,0.05)]' 
+                  ? 'border-[#FDE047]/35 cursor-default shadow-[0_20px_50px_rgba(253,224,71,0.05)]' 
                   : 'border-white/5 cursor-pointer hover:border-white/10 shadow-md'
               }`}
             >
