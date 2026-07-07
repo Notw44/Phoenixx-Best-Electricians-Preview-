@@ -303,9 +303,9 @@ export default function App() {
           </div>
 
           {/* Headline */}
-          <h1 className="serif text-4xl sm:text-5xl lg:text-6xl font-normal tracking-tight text-white max-w-4xl mx-auto leading-[1.15]">
-            Elite Electrical Craftsmanship <br />
-            <span className="italic font-normal text-[#FDE047] drop-shadow-[0_0_10px_rgba(253,224,71,0.2)]">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-normal tracking-tight text-white max-w-4xl mx-auto leading-[1.2]">
+            <span className="font-wiggly block mb-3 tracking-wide">Elite Electrical Craftsmanship</span>
+            <span className="serif italic font-normal text-[#FDE047] drop-shadow-[0_0_10px_rgba(253,224,71,0.2)]">
               Upfront Rates, 24/7 Priority
             </span>
           </h1>
@@ -329,7 +329,7 @@ export default function App() {
               href="tel:6027801140"
               className="group w-full xs:w-auto px-8 py-4 bg-[#111111] hover:bg-neutral-900 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-2xl text-white rounded-2xl text-sm font-semibold transition-all shadow-md border border-white/10 flex items-center justify-center gap-2"
             >
-              <Phone className="w-4 h-4 text-[#FDE047] animate-bounce group-hover:rotate-12 transition-transform" /> Dispatch Desk: (602) 780-1140
+              <Phone className="w-4 h-4 text-[#FDE047] animate-bounce group-hover:rotate-12 transition-transform" /> <span className="font-wiggly tracking-wide">Dispatch Desk: (602) 780-1140</span>
             </a>
           </div>
 
@@ -347,7 +347,7 @@ export default function App() {
                   <div className="w-12 h-12 rounded-xl bg-[#111111] border border-white/10 flex items-center justify-center text-[#FDE047] shadow-md group-hover:border-[#FDE047]/30 transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[0_15px_25px_rgba(253,224,71,0.08)]">
                     <Icon className="w-5.5 h-5.5 text-[#FDE047] group-hover:rotate-12 transition-transform duration-300 drop-shadow-[0_0_5px_rgba(253,224,71,0.5)]" />
                   </div>
-                  <h4 className="serif font-bold text-white text-base group-hover:text-[#FDE047] transition-colors">{item.title}</h4>
+                  <h4 className="font-wiggly text-white text-base group-hover:text-[#FDE047] transition-colors tracking-wide leading-tight">{item.title}</h4>
                   <p className="text-xs text-neutral-300 leading-normal">{item.desc}</p>
                 </div>
               );
@@ -368,10 +368,10 @@ export default function App() {
             transition={{ duration: 0.7 }}
             className="text-center max-w-2xl mx-auto mb-24"
           >
-            <span className="label-caps tracking-[0.2em] text-[#FDE047]">
+            <span className="font-wiggly tracking-[0.15em] text-[#FDE047] text-sm uppercase block">
               Elite Specializations
             </span>
-            <h2 className="serif text-3xl sm:text-4xl font-normal text-white mt-4">
+            <h2 className="font-wiggly text-2xl sm:text-3xl lg:text-4xl font-normal text-white mt-4 leading-snug">
               Electrical services engineered with absolute precision
             </h2>
             <p className="text-neutral-400 text-sm sm:text-base mt-4">
@@ -401,7 +401,7 @@ export default function App() {
                     </span>
                   </div>
 
-                  <h3 className="serif text-xl font-bold text-white group-hover:text-[#FDE047] transition-colors">
+                  <h3 className="font-wiggly text-xl text-white group-hover:text-[#FDE047] transition-colors tracking-wide leading-tight">
                     {srv.title}
                   </h3>
                   <p className="text-neutral-300 text-xs sm:text-sm leading-relaxed">
@@ -444,10 +444,10 @@ export default function App() {
           {/* Section Header with description and specs row */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
             <div className="lg:col-span-8 text-left space-y-6">
-              <span className="label-caps tracking-[0.2em] text-[#FDE047]">
+              <span className="font-wiggly tracking-[0.15em] text-[#FDE047] text-sm uppercase block">
                 The Standard of Perfection
               </span>
-              <h2 className="serif text-4xl sm:text-5xl lg:text-6xl font-normal text-white leading-tight">
+              <h2 className="font-wiggly text-3xl sm:text-4xl lg:text-5xl font-normal text-white leading-tight mt-4">
                 Architectural integrity, masterfully connected.
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 pt-2">
@@ -462,11 +462,11 @@ export default function App() {
             
             <div className="lg:col-span-4 lg:pt-16 flex flex-col sm:flex-row lg:flex-col gap-8 justify-end text-left">
               <div className="border-l-2 border-[#FDE047]/30 pl-4 space-y-1.5 group cursor-pointer">
-                <p className="text-2xl font-bold serif text-white group-hover:text-[#FDE047] transition-colors">90&deg; Rules</p>
+                <p className="text-xl font-bold font-wiggly text-white group-hover:text-[#FDE047] transition-colors">90&deg; Rules</p>
                 <p className="text-xs text-neutral-400">Perfect perpendicular wire routing for cooling and neatness</p>
               </div>
               <div className="border-l-2 border-[#FDE047]/30 pl-4 space-y-1.5 group cursor-pointer">
-                <p className="text-2xl font-bold serif text-white group-hover:text-[#FDE047] transition-colors">Lutron Pro</p>
+                <p className="text-xl font-bold font-wiggly text-white group-hover:text-[#FDE047] transition-colors">Lutron Pro</p>
                 <p className="text-xs text-neutral-400">Certified Smart Ambient dimming integrations</p>
               </div>
             </div>
@@ -484,10 +484,10 @@ export default function App() {
         <div className="absolute inset-0 bg-[radial-gradient(rgba(253,224,71,0.01)_1px,transparent_1px)] [background-size:32px_32px] opacity-40 pointer-events-none" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="label-caps tracking-[0.2em] text-[#FDE047]">
+            <span className="font-wiggly tracking-[0.15em] text-[#FDE047] text-sm uppercase block">
               Interactive Estimator
             </span>
-            <h2 className="serif text-3xl sm:text-4xl font-normal text-white mt-4">
+            <h2 className="font-wiggly text-3xl sm:text-4xl font-normal text-white mt-4">
               Instant Project Cost Estimator
             </h2>
             <p className="text-neutral-400 text-sm sm:text-base mt-4">
@@ -589,10 +589,10 @@ export default function App() {
         
         <div className="max-w-3xl mx-auto px-4 sm:px-6 relative z-10">
           <div className="text-center mb-10">
-            <span className="text-xs font-mono font-bold tracking-[0.2em] text-[#FDE047] bg-[#FDE047]/10 border border-[#FDE047]/20 px-3 py-1 rounded-full uppercase">
+            <span className="font-wiggly text-xs tracking-[0.15em] text-[#FDE047] bg-[#FDE047]/10 border border-[#FDE047]/20 px-3.5 py-1 rounded-full uppercase block w-fit mx-auto">
               Free Service Quote
             </span>
-            <h2 className="serif text-3xl sm:text-4xl font-normal text-white mt-5">
+            <h2 className="font-wiggly text-3xl sm:text-4xl font-normal text-white mt-5">
               Request a Free Quote
             </h2>
             <p className="text-neutral-400 text-xs sm:text-sm mt-3 max-w-lg mx-auto">
@@ -619,10 +619,10 @@ export default function App() {
             transition={{ duration: 0.7 }}
             className="text-center max-w-2xl mx-auto mb-24"
           >
-            <span className="label-caps tracking-[0.2em] text-[#FDE047]">
+            <span className="font-wiggly tracking-[0.15em] text-[#FDE047] text-sm uppercase block">
               Phoenix Metro Service Radar
             </span>
-            <h2 className="serif text-3xl sm:text-4xl font-normal text-white mt-4">
+            <h2 className="font-wiggly text-2xl sm:text-3xl lg:text-4xl font-normal text-white mt-4 leading-snug">
               Dispatched daily near Central Avenue
             </h2>
             <p className="text-neutral-300 text-sm sm:text-base mt-4">
@@ -647,10 +647,10 @@ export default function App() {
             transition={{ duration: 0.7 }}
             className="text-center max-w-2xl mx-auto mb-24"
           >
-            <span className="label-caps tracking-[0.2em] text-[#FDE047]">
+            <span className="font-wiggly tracking-[0.15em] text-[#FDE047] text-sm uppercase block">
               Consumer Validation
             </span>
-            <h2 className="serif text-3xl sm:text-4xl font-normal text-white mt-4">
+            <h2 className="font-wiggly text-2xl sm:text-3xl lg:text-4xl font-normal text-white mt-4 leading-snug">
               Read authentic feedback from Phoenix locals
             </h2>
             <p className="text-neutral-300 text-sm sm:text-base mt-4">
@@ -678,10 +678,10 @@ export default function App() {
             transition={{ duration: 0.7 }}
             className="text-center mb-24"
           >
-            <span className="label-caps tracking-[0.2em] text-[#FDE047]">
+            <span className="font-wiggly tracking-[0.15em] text-[#FDE047] text-sm uppercase block">
               Got Questions?
             </span>
-            <h2 className="serif text-3xl font-normal text-white mt-4">
+            <h2 className="font-wiggly text-3xl font-normal text-white mt-4">
               Frequently Asked Questions
             </h2>
             <p className="text-neutral-300 text-xs sm:text-sm mt-4">

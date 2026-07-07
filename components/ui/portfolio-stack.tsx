@@ -140,7 +140,7 @@ function ProjectCard({ project, index, total, scrollYProgress }: ProjectCardProp
 						</div>
 
 						{/* Title */}
-						<h3 className="serif text-lg sm:text-xl font-normal text-white tracking-tight group-hover:text-[#FDE047] transition-colors duration-300">
+						<h3 className="font-wiggly text-lg sm:text-xl font-normal text-white tracking-tight group-hover:text-[#FDE047] transition-colors duration-300">
 							{project.title}
 						</h3>
 

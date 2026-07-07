@@ -153,10 +153,10 @@ export default function ContactForm() {
           {/* Left Column: Direct contact details and brand guarantee */}
           <div className="lg:col-span-5 text-left space-y-8 flex flex-col justify-center">
             <div>
-              <span className="label-caps text-[#FDE047] tracking-[0.2em]">
+              <span className="font-wiggly text-[#FDE047] tracking-[0.15em] text-sm uppercase block">
                 Direct Priority Link
               </span>
-              <h2 className="serif text-4xl sm:text-5xl font-normal text-white mt-4 leading-tight">
+              <h2 className="font-wiggly text-3xl sm:text-4xl font-normal text-white mt-4 leading-snug">
                 Get in touch with Tracy &amp; team.
               </h2>
               <p className="text-neutral-400 text-sm sm:text-base mt-6 leading-relaxed">
