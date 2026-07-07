@@ -293,6 +293,11 @@ export default function App() {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 text-center"
         >
+          {/* Main Logo with Ambient Pulsating Glow */}
+          <div className="flex justify-center mb-4 sm:mb-6">
+            <GunmetalLogo size="xl" />
+          </div>
+
           {/* Rating Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#111111]/80 backdrop-blur-md border border-white/10 rounded-full shadow-md mb-10 hover:border-[#FDE047]/30 transition-all duration-300">
             <div className="flex items-center gap-0.5 text-[#FDE047] drop-shadow-[0_0_6px_rgba(253,224,71,0.5)]">
