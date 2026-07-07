@@ -77,8 +77,17 @@ const ScrollExpandMedia = ({
 
     const handleTouchMove = (e: TouchEvent) => {
       const touchEndY = e.touches[0].clientY;
-      if (touchStartY.current - touchEndY > 30) { // Swiped up / scrolled down
+      if (touchStartY.current - touchEndY > 25) { // Swiped up / scrolled down (lower threshold)
         triggerEnter();
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (e.changedTouches && e.changedTouches[0]) {
+        const touchEndY = e.changedTouches[0].clientY;
+        if (touchStartY.current - touchEndY > 25) {
+          triggerEnter();
+        }
       }
     };
 
@@ -92,12 +101,14 @@ const ScrollExpandMedia = ({
     window.addEventListener('wheel', handleWheel, { passive: true });
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [status]);
@@ -108,8 +119,12 @@ const ScrollExpandMedia = ({
 
     let touchStartScrollY = 0;
 
+    const getScrollTop = () => {
+      return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+    };
+
     const handleWheel = (e: WheelEvent) => {
-      if (window.scrollY <= 5 && e.deltaY < -10) {
+      if (getScrollTop() <= 10 && e.deltaY < -10) {
         triggerExit();
       }
     };
@@ -119,16 +134,25 @@ const ScrollExpandMedia = ({
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (window.scrollY <= 5) {
+      if (getScrollTop() <= 15) {
         const touchEndY = e.touches[0].clientY;
-        if (touchEndY - touchStartScrollY > 40) { // Swiped down / scrolled up
+        if (touchEndY - touchStartScrollY > 35) { // Swiped down / scrolled up (optimized threshold)
+          triggerExit();
+        }
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (getScrollTop() <= 15 && e.changedTouches && e.changedTouches[0]) {
+        const touchEndY = e.changedTouches[0].clientY;
+        if (touchEndY - touchStartScrollY > 35) {
           triggerExit();
         }
       }
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (window.scrollY <= 5 && (e.key === 'ArrowUp' || e.key === 'PageUp')) {
+      if (getScrollTop() <= 15 && (e.key === 'ArrowUp' || e.key === 'PageUp')) {
         triggerExit();
       }
     };
@@ -136,12 +160,14 @@ const ScrollExpandMedia = ({
     window.addEventListener('wheel', handleWheel, { passive: true });
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [status]);
@@ -150,12 +176,15 @@ const ScrollExpandMedia = ({
   useEffect(() => {
     if (status !== 'entered') {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
       window.scrollTo(0, 0);
     } else {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     }
     return () => {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     };
   }, [status]);
 
