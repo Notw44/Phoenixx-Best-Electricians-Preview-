@@ -37,7 +37,7 @@ export function PortfolioStack({ projects }: PortfolioStackProps) {
 
 	return (
 		<div ref={containerRef} className="relative w-full py-12">
-			<div className="flex flex-col gap-[14vh] md:gap-[25vh]">
+			<div className="flex flex-col gap-[20vh] md:gap-[25vh]">
 				{projects.map((project, index) => {
 					return (
 						<ProjectCard 
@@ -95,7 +95,7 @@ function ProjectCard({ project, index, total, scrollYProgress }: ProjectCardProp
 	return (
 		<div 
 			ref={cardRef}
-			className={`relative md:sticky w-full flex items-center justify-center py-3 md:py-6 sticky-card-${index}`}
+			className={`sticky w-full flex items-center justify-center py-3 md:py-6 sticky-card-${index}`}
 			style={{
 				top: `var(--sticky-top-offset-${index})`,
 			}}

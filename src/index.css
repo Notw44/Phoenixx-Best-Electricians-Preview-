@@ -68,7 +68,20 @@ body {
   background: #333333;
 }
 
-/* Portfolio Stack Sticky offsets for md screens and up */
+/* Portfolio Stack Sticky offsets for all screen sizes */
+.sticky-card-0 {
+  --sticky-top-offset-0: 68px;
+}
+.sticky-card-1 {
+  --sticky-top-offset-1: 84px;
+}
+.sticky-card-2 {
+  --sticky-top-offset-2: 100px;
+}
+.sticky-card-3 {
+  --sticky-top-offset-3: 116px;
+}
+
 @media (min-width: 768px) {
   .sticky-card-0 {
     --sticky-top-offset-0: 84px;
