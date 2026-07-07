@@ -316,20 +316,20 @@ export default function App() {
           </p>
 
           {/* CTAs */}
-          <div className="mt-14 flex flex-col xs:flex-row justify-center items-center gap-4">
+          <div className="mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
             <button
               onClick={() => scrollToBooking()}
-              className="group w-full xs:w-auto px-8 py-4 bg-gradient-to-r from-[#FDE047] via-[#FFF59D] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] hover:scale-[1.02] hover:-translate-y-1 text-[#0C0C0C] rounded-2xl text-sm font-bold tracking-wide transition-all duration-300 animate-luxury-glow active:scale-98 flex items-center justify-center gap-2.5 border border-yellow-200/50 cursor-pointer"
+              className="group w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-[#FDE047] via-[#FFF59D] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] hover:scale-[1.02] hover:-translate-y-0.5 text-[#0C0C0C] rounded-xl text-sm font-bold tracking-wide transition-all duration-300 animate-luxury-glow active:scale-98 flex items-center justify-center gap-2 border border-yellow-200/50 cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-[#0C0C0C] animate-pulse group-hover:rotate-12 transition-transform duration-300" />
-              <span>REQUEST A FREE QUOTE</span>
-              <ArrowRight className="w-4 h-4 text-[#0C0C0C] group-hover:translate-x-1.5 transition-transform duration-300" />
+              <span>Request Free Quote</span>
+              <ArrowRight className="w-4 h-4 text-[#0C0C0C] group-hover:translate-x-1 transition-transform duration-300" />
             </button>
             <a
               href="tel:6027801140"
-              className="group w-full xs:w-auto px-8 py-4 bg-[#111111] hover:bg-neutral-900 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-2xl text-white rounded-2xl text-sm font-semibold transition-all shadow-md border border-white/10 flex items-center justify-center gap-2"
+              className="group w-full sm:w-auto px-6 py-3.5 bg-[#111111] hover:bg-neutral-900 hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-2xl text-white rounded-xl text-sm font-semibold transition-all shadow-md border border-white/10 flex items-center justify-center gap-2"
             >
-              <Phone className="w-4 h-4 text-[#FDE047] animate-bounce group-hover:rotate-12 transition-transform" /> <span className="font-wiggly tracking-wide">Dispatch Desk: (602) 780-1140</span>
+              <Phone className="w-3.5 h-3.5 text-[#FDE047] animate-bounce group-hover:rotate-12 transition-transform" /> <span className="font-wiggly tracking-wide">Call (602) 780-1140</span>
             </a>
           </div>
 
