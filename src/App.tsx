@@ -19,6 +19,7 @@ import ShaderBackground from '@/components/ui/asd';
 import ScrollExpandMedia from '@/components/ui/scroll-expansion-hero';
 import { PortfolioStack } from '@/components/ui/portfolio-stack';
 import QuoteCalculator from './components/QuoteCalculator';
+import MagneticButton from './components/MagneticButton';
 
 import luxurySmartHomePanel from './assets/images/luxury_smart_home_panel_1783000379209.jpg';
 import designerLighting from './assets/images/designer_lighting_1783000392525.jpg';
@@ -264,6 +265,17 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#0C0C0C] text-white font-sans leading-relaxed relative overflow-x-clip">
       
+      {/* Premium Tactile Organic Noise Texture Overlay - Mimicking Leica/Apple paper-like textures */}
+      <div className="fixed inset-0 pointer-events-none z-[9999] opacity-[0.025] mix-blend-overlay">
+        <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" className="w-full h-full">
+          <filter id="premium-tactile-noise">
+            <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.08 0" />
+          </filter>
+          <rect width="100%" height="100%" filter="url(#premium-tactile-noise)" />
+        </svg>
+      </div>
+      
       {/* Premium WebGL Animated Gold & Slate Steel Background - Blended perfectly for high-end luxury */}
       <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.28]">
         <ShaderBackground />
@@ -282,7 +294,7 @@ export default function App() {
         <Header onOpenBooking={() => scrollToBooking()} />
 
       {/* Hero Section with spacious, luxurious vertical padding */}
-      <section className="relative overflow-hidden pt-40 pb-44 sm:pt-56 sm:pb-64 lg:pt-64 lg:pb-72 border-b border-white/10">
+      <section className="relative overflow-hidden pt-44 pb-48 sm:pt-60 sm:pb-72 lg:pt-72 lg:pb-80 border-b border-white/10">
         {/* Ambient subtle warm gold glow background */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#FDE047]/2.5 blur-[120px] rounded-full pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.12] pointer-events-none" />
@@ -308,36 +320,72 @@ export default function App() {
             </span>
           </div>
 
-          {/* Headline */}
+          {/* Headline - Split-Text Clipping Mask Entrance Animation */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-normal tracking-tight text-white max-w-4xl mx-auto leading-[1.2]">
-            <span className="font-wiggly block mb-3 tracking-wide">Elite Electrical Craftsmanship</span>
-            <span className="serif italic font-normal text-[#FDE047] drop-shadow-[0_0_10px_rgba(253,224,71,0.2)]">
-              Upfront Rates, 24/7 Priority
+            <span className="font-wiggly block mb-3 tracking-wide overflow-hidden pb-2 pt-1">
+              {"Elite Electrical Craftsmanship".split(" ").map((word, i) => (
+                <motion.span
+                  key={i}
+                  className="inline-block mr-[0.25em]"
+                  initial={{ y: "115%", opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: 0.15 + i * 0.08 }}
+                >
+                  {word}
+                </motion.span>
+              ))}
+            </span>
+            <span className="serif italic font-normal text-[#FDE047] drop-shadow-[0_0_10px_rgba(253,224,71,0.2)] block overflow-hidden pb-2 pt-1">
+              {"Upfront Rates, 24/7 Priority".split(" ").map((word, i) => (
+                <motion.span
+                  key={i}
+                  className="inline-block mr-[0.25em]"
+                  initial={{ y: "115%", opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: 0.45 + i * 0.08 }}
+                >
+                  {word}
+                </motion.span>
+              ))}
             </span>
           </h1>
 
-          {/* Subtext */}
-          <p className="mt-10 text-base sm:text-lg text-neutral-300 max-w-2xl mx-auto font-normal leading-relaxed">
+          {/* Subtext - Delayed Staggered Fade Up */}
+          <motion.p 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.95 }}
+            className="mt-10 text-base sm:text-lg text-neutral-300 max-w-2xl mx-auto font-normal leading-relaxed"
+          >
             Phoenix&apos;s high-end choice for master panel upgrades, premium solar consultations, and expert troubleshooting. Serviced with absolute clarity and zero hidden fees.
-          </p>
+          </motion.p>
 
-          {/* CTAs */}
-          <div className="mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
-            <button
+          {/* CTAs with Kinetic Magnetic Pull & Liquid Golden Border */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 1.1 }}
+            className="mt-10 flex flex-col sm:flex-row justify-center items-center gap-6 max-w-xl mx-auto w-full px-4"
+          >
+            <MagneticButton
               onClick={() => scrollToBooking()}
-              className="group w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-[#FDE047] via-[#FFF59D] to-[#EAB308] hover:from-[#FFF59D] hover:to-[#FDE047] hover:scale-[1.02] hover:-translate-y-0.5 text-[#0C0C0C] rounded-xl text-sm font-bold tracking-wide transition-all duration-300 animate-luxury-glow active:scale-98 flex items-center justify-center gap-2 border border-yellow-200/50 cursor-pointer"
+              variant="primary"
+              className="w-full sm:w-auto min-w-[220px]"
             >
-              <Sparkles className="w-4 h-4 text-[#0C0C0C] animate-pulse group-hover:rotate-12 transition-transform duration-300" />
-              <span>Request Free Quote</span>
-              <ArrowRight className="w-4 h-4 text-[#0C0C0C] group-hover:translate-x-1 transition-transform duration-300" />
-            </button>
-            <a
-              href="tel:6027801140"
-              className="group w-full sm:w-auto px-6 py-3.5 bg-[#111111] hover:bg-neutral-900 hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-2xl text-white rounded-xl text-sm font-semibold transition-all shadow-md border border-white/10 flex items-center justify-center gap-2"
+              <Sparkles className="w-4 h-4 text-[#FDE047] animate-pulse group-hover:rotate-12 transition-transform duration-300" />
+              <span className="text-sm font-bold text-white tracking-wide">Request Free Quote</span>
+              <ArrowRight className="w-4 h-4 text-white group-hover:translate-x-1 transition-transform duration-300" />
+            </MagneticButton>
+            
+            <MagneticButton
+              onClick={() => window.location.href = "tel:6027801140"}
+              variant="secondary"
+              className="w-full sm:w-auto min-w-[220px]"
             >
-              <Phone className="w-3.5 h-3.5 text-[#FDE047] animate-bounce group-hover:rotate-12 transition-transform" /> <span className="font-wiggly tracking-wide">Call (602) 780-1140</span>
-            </a>
-          </div>
+              <Phone className="w-3.5 h-3.5 text-[#FDE047] animate-bounce group-hover:rotate-12 transition-transform" /> 
+              <span className="text-sm font-semibold font-wiggly tracking-wide text-white">Call (602) 780-1140</span>
+            </MagneticButton>
+          </motion.div>
 
           {/* Trust points bar */}
           <div className="mt-24 sm:mt-36 border-t border-white/10 pt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-left">
@@ -363,7 +411,7 @@ export default function App() {
       </section>
 
       {/* Specialties Bento Grid Section with spacious, luxurious vertical padding */}
-      <section id="services" className="py-44 sm:py-64 lg:py-72 bg-[#0C0C0C] border-b border-white/10 relative overflow-hidden">
+      <section id="services" className="py-48 sm:py-72 lg:py-80 bg-[#0C0C0C] border-b border-white/10 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(rgba(253,224,71,0.01)_1px,transparent_1px)] [background-size:32px_32px] opacity-40 pointer-events-none" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -391,7 +439,7 @@ export default function App() {
       </section>
 
       {/* Deluxe Portfolio Spotlight with spacious, luxurious vertical padding */}
-      <section className="relative overflow-clip pt-24 sm:pt-32 pb-0 bg-gradient-to-tr from-[#12100C] via-[#1D1A13] to-[#0D0B0A] border-y border-yellow-500/10">
+      <section className="relative overflow-clip pt-36 sm:pt-48 pb-0 bg-gradient-to-tr from-[#12100C] via-[#1D1A13] to-[#0D0B0A] border-y border-yellow-500/10">
         {/* Subtle diagonal grid accents */}
         <div className="absolute inset-0 bg-[radial-gradient(rgba(253,224,71,0.02)_1px,transparent_1px)] [background-size:32px_32px] opacity-60 pointer-events-none" />
         
@@ -439,7 +487,7 @@ export default function App() {
       </section>
 
       {/* Interactive Project Cost Estimator & Quote Section */}
-      <section id="quote-section" className="py-24 sm:py-32 bg-black border-b border-white/10 relative overflow-hidden">
+      <section id="quote-section" className="py-36 sm:py-48 lg:py-56 bg-black border-b border-white/10 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(rgba(253,224,71,0.01)_1px,transparent_1px)] [background-size:32px_32px] opacity-40 pointer-events-none" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-16">
@@ -461,7 +509,7 @@ export default function App() {
       {/* Key Lead Generator Block with spacious, luxurious vertical padding */}
       <section 
         id="estimate-section" 
-        className="pt-4 pb-24 sm:pb-32 bg-[#111111] text-white relative border-b border-white/10 overflow-hidden"
+        className="pt-12 pb-36 sm:pb-48 bg-[#111111] text-white relative border-b border-white/10 overflow-hidden"
       >
         {/* Animated Golden Electricity Background Container */}
         <div className="absolute inset-0 z-0 select-none overflow-hidden pointer-events-none">
@@ -567,7 +615,7 @@ export default function App() {
       </section>
 
       {/* Live Radar Coverage Zone section with spacious, luxurious vertical padding */}
-      <section id="coverage" className="py-44 sm:py-64 lg:py-72 bg-[#0C0C0C] border-b border-white/10 relative">
+      <section id="coverage" className="py-48 sm:py-72 lg:py-80 bg-[#0C0C0C] border-b border-white/10 relative">
         <div className="absolute inset-0 bg-[radial-gradient(rgba(253,224,71,0.01)_1px,transparent_1px)] [background-size:32px_32px] opacity-40 pointer-events-none" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -595,7 +643,7 @@ export default function App() {
       </section>
 
       {/* Customer Testimonials & Verified reviews section with spacious, luxurious vertical padding */}
-      <section id="reviews" className="py-44 sm:py-64 lg:py-72 bg-[#111111] border-t border-b border-white/10 relative">
+      <section id="reviews" className="py-48 sm:py-72 lg:py-80 bg-[#111111] border-t border-b border-white/10 relative">
         <div className="absolute inset-0 bg-[radial-gradient(rgba(253,224,71,0.015)_1px,transparent_1px)] [background-size:32px_32px] opacity-40 pointer-events-none" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -626,7 +674,7 @@ export default function App() {
       </section>
 
       {/* FAQ Section with spacious, luxurious vertical padding */}
-      <section className="py-44 sm:py-64 lg:py-72 bg-[#0C0C0C] border-b border-white/10 relative">
+      <section className="py-48 sm:py-72 lg:py-80 bg-[#0C0C0C] border-b border-white/10 relative">
         <div className="absolute inset-0 bg-[radial-gradient(rgba(253,224,71,0.01)_1px,transparent_1px)] [background-size:32px_32px] opacity-40 pointer-events-none" />
         
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
